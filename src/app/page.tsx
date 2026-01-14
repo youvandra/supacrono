@@ -1,6 +1,6 @@
 "use client"
 
-import Image from "next/image"
+import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import {
   ArrowDownRight,
@@ -199,16 +199,23 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
               A
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-slate-900">Acme</span>
-              <span className="text-xs text-slate-500">12 members</span>
+              <span className="text-sm font-medium text-slate-900">
+                Supacron Pool
+              </span>
+              <span className="text-xs text-slate-500">
+                Cronos EVM · AI-native
+              </span>
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
             <span className="rounded-full border border-slate-200 px-2 py-1">
-              Dashboard
+              Pool
             </span>
             <span className="rounded-full border border-slate-200 px-2 py-1">
-              Analytics
+              Risk
+            </span>
+            <span className="rounded-full border border-slate-200 px-2 py-1">
+              AI log
             </span>
           </div>
         </div>
@@ -217,22 +224,19 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
           <aside className="hidden w-52 border-r border-slate-100 bg-slate-50/60 p-4 text-sm text-slate-600 md:block">
             <nav className="space-y-2" aria-label="Dashboard navigation">
               <button className="flex w-full items-center justify-between rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm outline-none ring-offset-2 ring-offset-slate-50 transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-200">
-                <span>Dashboard</span>
+                <span>Pool overview</span>
                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                  New
+                  Live
                 </span>
               </button>
               <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
-                Calendar
+                Roles · Takers / Absorbers
               </button>
               <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
-                Analytics
+                Risk budget
               </button>
               <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
-                Finance
-              </button>
-              <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
-                Customers
+                AI trades log
               </button>
             </nav>
           </aside>
@@ -241,49 +245,50 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
-                  Overview
+                  Pool status
                 </p>
                 <h3 className="mt-1 text-lg font-semibold text-slate-900">
-                  Dashboard
+                  Cronos pooled trading engine
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Effortlessly manage your business.
+                  Takers and Absorbers co-manage capital with AI execution and
+                  on-chain risk rails.
                 </p>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
-                  This week
+                  Last 24h
                 </span>
                 <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
-                  Team plan
+                  v0.1 risk budget
                 </span>
               </div>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-4">
               <MetricCard
-                label="Revenue"
-                value="$50,974"
+                label="Pool TVL"
+                value="$1.25M"
                 trend="up"
-                change="+26.2%"
+                change="+4.3%"
               />
               <MetricCard
-                label="Expenses"
-                value="$7,620"
+                label="Taker PnL"
+                value="+$82,410"
                 trend="up"
-                change="+10.8%"
+                change="+11.6%"
               />
               <MetricCard
-                label="Customers"
-                value="1,218"
+                label="Absorber yield (APY)"
+                value="9.8%"
+                trend="up"
+                change="+1.2%"
+              />
+              <MetricCard
+                label="Drawdown vs limit"
+                value="-6.4% / -20%"
                 trend="down"
-                change="-12.4%"
-              />
-              <MetricCard
-                label="Projects"
-                value="125"
-                trend="up"
-                change="+7.6%"
+                change="-0.9%"
               />
             </div>
 
@@ -291,69 +296,50 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
               <Card className="border-slate-200 bg-slate-50/60">
                 <CardHeader className="border-b border-slate-100">
                   <CardTitle className="text-sm font-semibold text-slate-900">
-                    Analytics
+                    AI trading lane
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500">
-                    See how your business is performing over time.
+                    HBAR / USDT futures on Crypto.com, sized by pool risk
+                    budget.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <div className="relative h-32">
-                    <Image
-                      src="/window.svg"
-                      alt="Analytics preview"
-                      fill
-                      className="rounded-lg object-cover"
-                      priority
-                    />
-                  </div>
+                  <TradingViewWidget />
                 </CardContent>
               </Card>
 
               <Card className="border-slate-200">
                 <CardHeader className="border-b border-slate-100">
                   <CardTitle className="text-sm font-semibold text-slate-900">
-                    Calendar
+                    Risk & circuit breakers
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500">
-                    Stay on top of what&apos;s coming next.
+                    Upcoming guardrail events for Absorber capital.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4 text-xs text-slate-600">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                      <div>
-                        <p className="text-xs font-medium text-slate-900">
-                          Creative Session with James
-                        </p>
-                        <p>6:00 PM – 7:00 PM</p>
-                      </div>
-                      <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
-                        Today
-                      </span>
+                    <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
+                      <p className="text-xs font-medium text-slate-900">
+                        Drawdown soft limit reached
+                      </p>
+                      <p>
+                        AI switches to recovery mode until buffer refills.
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg px-3 py-2">
-                      <div>
-                        <p className="text-xs font-medium text-slate-900">
-                          Collaboration Meeting with Lisa
-                        </p>
-                        <p>3:00 PM – 3:30 PM</p>
-                      </div>
-                      <div className="flex -space-x-1">
-                        <Avatar className="h-7 w-7 border border-white">
-                          <AvatarImage src="/vercel.svg" alt="" />
-                          <AvatarFallback>JL</AvatarFallback>
-                        </Avatar>
-                        <Avatar className="h-7 w-7 border border-white">
-                          <AvatarImage src="/next.svg" alt="" />
-                          <AvatarFallback>LM</AvatarFallback>
-                        </Avatar>
-                      </div>
+                    <div className="space-y-1 rounded-lg px-3 py-2">
+                      <p className="text-xs font-medium text-slate-900">
+                        Yield waterfall distribution
+                      </p>
+                      <p>
+                        Absorber yield and performance fee paid, surplus to
+                        Takers.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter className="border-t border-slate-100 pt-4 text-xs text-slate-500">
-                  <span>See all upcoming events</span>
+                  <span>View full on-chain event log</span>
                   <ArrowUpRight className="ml-2 h-3 w-3" aria-hidden="true" />
                 </CardFooter>
               </Card>
@@ -362,6 +348,42 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
         </div>
       </Card>
     </motion.div>
+  )
+}
+
+function TradingViewWidget() {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    if (containerRef.current.querySelector("script")) return
+
+    const script = document.createElement("script")
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js"
+    script.type = "text/javascript"
+    script.async = true
+    script.innerHTML = JSON.stringify({
+      symbol: "CRYPTOCOM:CROUSD",
+      width: "100%",
+      height: 160,
+      locale: "en",
+      dateRange: "1D",
+      colorTheme: "light",
+      trendLineColor: "rgba(34, 197, 94, 1)",
+      underLineColor: "rgba(220, 252, 231, 1)",
+      isTransparent: true,
+      autosize: true,
+    })
+
+    containerRef.current.appendChild(script)
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="h-40 w-full rounded-lg border border-slate-200 bg-white/60"
+    />
   )
 }
 
@@ -378,23 +400,22 @@ function MetricCard({ label, value, change, trend }: MetricCardProps) {
   const trendColor = isUp ? "text-emerald-600" : "text-rose-500"
 
   return (
-    <Card className="border-slate-200">
+    <Card className="border-slate-200 bg-white">
       <CardHeader className="border-b border-slate-100 pb-2">
         <CardTitle className="text-xs font-medium text-slate-500">
           {label}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-3">
-        <div className="flex items-end justify-between">
+        <div className="flex items-center justify-between">
           <p className="text-lg font-semibold text-slate-900">{value}</p>
-          <div
+          <span
             className={`inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-medium ${trendColor}`}
           >
             <TrendIcon className="mr-1 h-3 w-3" aria-hidden="true" />
             {change}
-          </div>
+          </span>
         </div>
-        <div className="mt-3 h-10 w-full rounded-md bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100" />
       </CardContent>
     </Card>
   )
@@ -433,7 +454,7 @@ function FeaturesSection() {
           Features
         </h2>
         <p className="mt-3 text-balance text-xl font-semibold text-slate-900 sm:text-2xl">
-          Everything you need to run a modern business.
+          Everything you need for governed pooled AI trading.
         </p>
       </div>
 
