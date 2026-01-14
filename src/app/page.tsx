@@ -223,9 +223,6 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
                 </span>
               </button>
               <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
-                Roles · Takers / Absorbers
-              </button>
-              <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
                 Risk budget
               </button>
               <button className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-slate-600 transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
