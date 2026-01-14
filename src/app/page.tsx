@@ -68,9 +68,12 @@ function SiteHeader() {
           >
             Governance
           </a>
-          <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
+          <a
+            href="/pool"
+            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
+          >
             Pool
-          </span>
+          </a>
           <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
             Portfolio
           </span>
@@ -205,7 +208,9 @@ function FooterSection() {
             >
               Governance
             </a>
-            <span>Pool</span>
+            <a href="/pool" className="transition-colors hover:text-slate-900">
+              Pool
+            </a>
             <span>Portfolio</span>
           </div>
         </div>

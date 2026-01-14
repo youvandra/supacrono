@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowUpRight } from "lucide-react"
+import { ArrowUpRight, Wallet } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -37,9 +37,12 @@ function SiteHeader() {
           >
             Governance
           </a>
-          <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
+          <a
+            href="/pool"
+            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
+          >
             Pool
-          </span>
+          </a>
           <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
             Portfolio
           </span>
@@ -52,6 +55,7 @@ function SiteHeader() {
             className="hidden rounded-full border-slate-200 bg-white px-4 text-xs font-medium shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-slate-50 md:inline-flex"
             aria-label="Connect wallet"
           >
+            <Wallet className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
             Connect wallet
           </Button>
           <Button
