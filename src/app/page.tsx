@@ -394,21 +394,19 @@ function MetricCard({ label, value, change, trend }: MetricCardProps) {
 
   return (
     <Card className="border-slate-200 bg-white">
-      <CardHeader className="border-b border-slate-100 pb-2">
+      <CardHeader className="flex items-center justify-between border-b border-slate-100 pb-2">
         <CardTitle className="text-xs font-medium text-slate-500">
           {label}
         </CardTitle>
+        <span
+          className={`inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-medium ${trendColor}`}
+        >
+          <TrendIcon className="mr-1 h-3 w-3" aria-hidden="true" />
+          {change}
+        </span>
       </CardHeader>
       <CardContent className="pt-3">
-        <div className="flex items-center justify-between">
-          <p className="text-lg font-semibold text-slate-900">{value}</p>
-          <span
-            className={`inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-[11px] font-medium ${trendColor}`}
-          >
-            <TrendIcon className="mr-1 h-3 w-3" aria-hidden="true" />
-            {change}
-          </span>
-        </div>
+        <p className="text-lg font-semibold text-slate-900">{value}</p>
       </CardContent>
     </Card>
   )
