@@ -50,7 +50,7 @@ function SiteHeader() {
             S
           </div>
           <span className="text-base font-semibold tracking-tight text-slate-900">
-            Superior
+            Supacron
           </span>
         </a>
 
@@ -125,25 +125,26 @@ function HeroSection() {
           <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
             New
           </span>
-          <span className="text-xs">Announcing API 2.0</span>
+          <span className="text-xs">Cronos EVM hackathon prototype</span>
         </Badge>
 
         <h1 className="mt-6 text-balance text-5xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-6xl md:text-7xl">
-          The most powerful business platform.
+          AI-native pooled trading protocol.
         </h1>
 
         <p className="mt-4 max-w-md text-balance text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl">
-          Unlock the potential of your business with our next-level SaaS
-          platform. Transform your workflows and achieve new heights today.
+          Supacron lets users co-manage pooled capital on Cronos EVM with an
+          AI trading engine, aligning upside-seeking Takers and yield-focused
+          Absorbers under transparent, on-chain risk governance.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               className="inline-flex w-full items-center justify-center rounded-full px-6 py-5 text-sm font-medium shadow-sm sm:w-auto"
-              aria-label="Get started with Superior"
+              aria-label="Get started with Supacron"
             >
-              Get started
+              Join the pool
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </motion.div>
@@ -402,19 +403,19 @@ function MetricCard({ label, value, change, trend }: MetricCardProps) {
 function FeaturesSection() {
   const features = [
     {
-      title: "Realtime analytics",
+      title: "Dual economic roles",
       description:
-        "Monitor key metrics in real time so your team can react instantly.",
+        "Takers chase upside with aggressive exposure while Absorbers supply stable capital and earn protected yield.",
     },
     {
-      title: "Collaborative workflows",
+      title: "On-chain risk governance",
       description:
-        "Bring teams together with shared dashboards, comments, and approvals.",
+        "Smart contracts on Cronos EVM enforce drawdown limits, circuit breakers, and profit / loss waterfalls.",
     },
     {
-      title: "Enterprise-grade security",
+      title: "AI trading engine",
       description:
-        "Stay compliant with enterprise-ready security, SSO, and audit logs.",
+        "Off-chain AI trades on Crypto.com Futures with dynamic sizing and bias, fully logged on-chain for auditability.",
     },
   ]
 
@@ -476,11 +477,12 @@ function TestimonialsSection() {
           Testimonials
         </h2>
         <p className="mt-3 text-balance text-xl font-semibold text-slate-900 sm:text-2xl">
-          Loved by modern teams around the world.
+          Built for serious DeFi and trading teams.
         </p>
         <p className="mt-3 max-w-md text-sm text-slate-600">
-          Superior is the operational backbone for fast-growing SaaS companies,
-          giving leaders confidence in every decision.
+          Supacron combines AI execution, capital tranching, and on-chain
+          settlement to create a transparent, self-regulating environment for
+          pooled trading and hedging on Cronos EVM.
         </p>
 
         <div className="mt-6 flex items-center gap-4">
@@ -499,8 +501,8 @@ function TestimonialsSection() {
             </Avatar>
           </div>
           <div className="text-xs text-slate-600">
-            <p className="font-semibold text-slate-900">4,000+ teams</p>
-            <p>trust Superior to power their operations.</p>
+            <p className="font-semibold text-slate-900">Two-sided market</p>
+            <p>aligning Takers and Absorbers in a single pooled engine.</p>
           </div>
         </div>
       </div>
@@ -511,23 +513,23 @@ function TestimonialsSection() {
       >
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-slate-900">
-            “Superior has completely transformed the way our team works.”
+            “Supacron makes pooled AI trading actually governable.”
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 text-sm text-slate-600">
           <p>
-            “We consolidated three different tools into one and gained a unified
-            view of our customers, projects, and revenue. Our team moves faster
-            and has more confidence in the data they use every day.”
+            “The protocol encodes drawdown limits, waterfalls, and circuit
+            breakers directly in smart contracts. Our team can push AI-driven
+            trading while keeping Absorber capital explicitly protected.”
           </p>
         </CardContent>
         <CardFooter className="mt-4 flex items-center justify-between pt-4">
           <div>
             <p className="text-sm font-semibold text-slate-900">
-              Alex Carter
+              Lena Park
             </p>
             <p className="text-xs text-slate-500">
-              VP of Operations, Northwind Systems
+              Core contributor, Cronos hackathon team
             </p>
           </div>
           <Button
@@ -536,7 +538,7 @@ function TestimonialsSection() {
             className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
             aria-label="View customer stories"
           >
-            View case studies
+            View protocol docs
             <ArrowUpRight className="ml-2 h-3 w-3" aria-hidden="true" />
           </Button>
         </CardFooter>

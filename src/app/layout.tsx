@@ -13,16 +13,16 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Superior – The most powerful business platform",
+  title: "Supacron – AI-native pooled trading on Cronos EVM",
   description:
-    "Superior is the next-level SaaS platform for modern teams to manage revenue, projects, and customers in one unified dashboard.",
-  metadataBase: new URL("https://superior.example.com"),
+    "Supacron is an AI-powered pooled trading protocol on Cronos EVM where Takers chase upside and Absorbers earn protected yield under strict on-chain risk governance.",
+  metadataBase: new URL("https://supacron.example.com"),
   openGraph: {
-    title: "Superior – The most powerful business platform",
+    title: "Supacron – AI-native pooled trading on Cronos EVM",
     description:
-      "Unlock the potential of your business with real-time analytics, collaborative workflows, and enterprise-ready security.",
-    url: "https://superior.example.com",
-    siteName: "Superior",
+      "AI executes trades off-chain while Cronos EVM smart contracts manage pooled capital, waterfalls, and circuit breakers for Takers and Absorbers.",
+    url: "https://supacron.example.com",
+    siteName: "Supacron",
     images: [
       {
         url: "/og-image.png",
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Superior – The most powerful business platform",
+    title: "Supacron – AI-native pooled trading on Cronos EVM",
     description:
-      "Transform your workflows and unlock the potential of your business with Superior.",
+      "Join a trustable, transparent, and self-regulating environment for AI-driven pooled trading and hedging on Cronos EVM.",
     images: ["/og-image.png"],
   },
 }
