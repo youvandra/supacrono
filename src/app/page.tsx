@@ -6,6 +6,8 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
+  Wallet,
+  FileText,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -84,6 +86,7 @@ function SiteHeader() {
             className="hidden rounded-full border-slate-200 bg-white px-4 text-xs font-medium shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-slate-50 md:inline-flex"
             aria-label="Connect wallet"
           >
+            <Wallet className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
             Connect wallet
           </Button>
           <Button
@@ -109,7 +112,7 @@ function HeroSection() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <div className="flex max-w-xl flex-col items-center">
+      <div className="flex max-w-2xl flex-col items-center">
         <Badge className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-700">
           <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
             New
@@ -121,7 +124,7 @@ function HeroSection() {
           AI-native pooled trading protocol.
         </h1>
 
-        <p className="mt-4 max-w-md text-balance text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl">
+        <p className="mt-4 max-w-2xl text-balance text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl">
           Supacron lets users co-manage pooled capital on Cronos EVM with an
           AI trading engine, aligning upside-seeking Takers and yield-focused
           Absorbers under transparent, on-chain risk governance.
@@ -141,9 +144,10 @@ function HeroSection() {
             <Button
               variant="outline"
               className="inline-flex w-full items-center justify-center rounded-full border-slate-200 bg-white px-6 py-5 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50 sm:w-auto"
-              aria-label="Learn more about Superior"
+              aria-label="Open protocol documentation"
             >
-              Learn more
+              Docs
+              <FileText className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </motion.div>
         </div>
