@@ -6,7 +6,6 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
-  ChevronDown,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -58,33 +57,23 @@ function SiteHeader() {
           className="hidden items-center gap-8 text-sm text-slate-600 md:flex"
           aria-label="Primary"
         >
-          <button className="inline-flex items-center gap-1 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1">
-            <span>Pages</span>
-            <ChevronDown className="h-4 w-4" aria-hidden="true" />
-          </button>
           <a
-            href="#about"
+            href="#governance"
             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
           >
-            About
+            Governance
           </a>
           <a
-            href="#pricing"
+            href="#pool"
             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
           >
-            Pricing
+            Pool
           </a>
           <a
-            href="#integrations"
+            href="#portfolio"
             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
           >
-            Integrations
-          </a>
-          <a
-            href="#blog"
-            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
-          >
-            Blog
+            Portfolio
           </a>
         </nav>
 
@@ -93,9 +82,9 @@ function SiteHeader() {
             variant="outline"
             size="sm"
             className="hidden rounded-full border-slate-200 bg-white px-4 text-xs font-medium shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-slate-50 md:inline-flex"
-            aria-label="Book a demo"
+            aria-label="Connect wallet"
           >
-            Book a demo
+            Connect wallet
           </Button>
           <Button
             variant="outline"
