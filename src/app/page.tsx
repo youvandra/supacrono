@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import {
@@ -34,7 +35,9 @@ export default function Home() {
         <DashboardSection />
         <FeaturesSection />
         <TestimonialsSection />
+        <SupportSection />
       </main>
+      <FooterSection />
     </div>
   )
 }
@@ -153,6 +156,77 @@ function HeroSection() {
         </div>
       </div>
     </motion.section>
+  )
+}
+
+function SupportSection() {
+  return (
+    <section
+      aria-label="Supported by"
+      className="mt-8 flex flex-col items-center gap-4 text-xs text-slate-500 sm:mt-10"
+    >
+      <p>Supported by</p>
+      <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/support/cronos.svg"
+            alt="Cronos"
+            width={90}
+            height={24}
+            className="h-6 w-auto"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/support/cryptocom.png"
+            alt="Crypto.com"
+            width={110}
+            height={28}
+            className="h-7 w-auto"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function FooterSection() {
+  return (
+    <footer className="border-t border-slate-200 bg-white/70">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+            S
+          </div>
+          <span className="text-sm font-semibold text-slate-900">
+            Supacron
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <span>© {new Date().getFullYear()} Supacron. All rights reserved.</span>
+          <div className="flex items-center gap-3">
+            <a
+              href="#governance"
+              className="transition-colors hover:text-slate-900"
+            >
+              Governance
+            </a>
+            <a
+              href="#pool"
+              className="transition-colors hover:text-slate-900"
+            >
+              Pool
+            </a>
+            <a
+              href="#portfolio"
+              className="transition-colors hover:text-slate-900"
+            >
+              Portfolio
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   )
 }
 
