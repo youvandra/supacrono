@@ -63,23 +63,17 @@ function SiteHeader() {
           aria-label="Primary"
         >
           <a
-            href="#governance"
+            href="/governance"
             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
           >
             Governance
           </a>
-          <a
-            href="#pool"
-            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
-          >
+          <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
             Pool
-          </a>
-          <a
-            href="#portfolio"
-            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
-          >
+          </span>
+          <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
             Portfolio
-          </a>
+          </span>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -206,23 +200,13 @@ function FooterSection() {
           <span>© {new Date().getFullYear()} Supacron. All rights reserved.</span>
           <div className="flex items-center gap-3">
             <a
-              href="#governance"
+              href="/governance"
               className="transition-colors hover:text-slate-900"
             >
               Governance
             </a>
-            <a
-              href="#pool"
-              className="transition-colors hover:text-slate-900"
-            >
-              Pool
-            </a>
-            <a
-              href="#portfolio"
-              className="transition-colors hover:text-slate-900"
-            >
-              Portfolio
-            </a>
+            <span>Pool</span>
+            <span>Portfolio</span>
           </div>
         </div>
       </div>
