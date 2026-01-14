@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight, Wallet } from "lucide-react"
 
@@ -81,6 +82,7 @@ export default function PoolPage() {
       <SiteHeader />
       <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-8">
         <PoolOverviewSection />
+        <PoolAdvancedChartSection />
         <AITradingStatusSection />
         <CapitalDistributionSection />
         <PnlWaterfallSection />
@@ -217,6 +219,72 @@ function PoolOverviewSection() {
         </CardContent>
       </Card>
     </motion.section>
+  )
+}
+
+function PoolAdvancedChartSection() {
+  return (
+    <motion.section
+      className="mt-8"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <Card className="border-slate-200 bg-white/95">
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="text-sm font-semibold text-slate-900">
+            CRO / USD advanced chart
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <PoolTradingViewAdvancedChart />
+        </CardContent>
+      </Card>
+    </motion.section>
+  )
+}
+
+function PoolTradingViewAdvancedChart() {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    if (containerRef.current.querySelector("script")) return
+
+    const script = document.createElement("script")
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+    script.type = "text/javascript"
+    script.async = true
+    script.innerHTML = JSON.stringify({
+      autosize: true,
+      symbol: "CRYPTOCOM:CROUSD",
+      interval: "60",
+      timezone: "Etc/UTC",
+      theme: "light",
+      style: "1",
+      locale: "en",
+      enable_publishing: false,
+      hide_top_toolbar: false,
+      hide_legend: false,
+      allow_symbol_change: false,
+      withdateranges: true,
+      range: "1D",
+      details: false,
+      hotlist: false,
+      calendar: false,
+      hide_volume: false,
+    })
+
+    containerRef.current.appendChild(script)
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="h-80 w-full overflow-hidden rounded-lg border border-slate-200 bg-white/60"
+    />
   )
 }
 
