@@ -30,12 +30,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
       <SiteHeader />
-      <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-8 lg:pt-16">
+      <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-10">
         <HeroSection />
         <DashboardSection />
+        <SupportSection />
         <FeaturesSection />
         <TestimonialsSection />
-        <SupportSection />
       </main>
       <FooterSection />
     </div>
@@ -110,7 +110,7 @@ function HeroSection() {
   return (
     <motion.section
       id="hero"
-      className="flex min-h-[60vh] flex-col items-center justify-center text-center"
+      className="flex min-h-[55vh] flex-col items-center justify-center text-center"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
@@ -163,7 +163,7 @@ function SupportSection() {
   return (
     <section
       aria-label="Supported by"
-      className="mt-8 flex flex-col items-center gap-4 text-xs text-slate-500 sm:mt-10"
+      className="mt-12 flex flex-col items-center gap-4 text-xs text-slate-500 sm:mt-16"
     >
       <p>Supported by</p>
       <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
@@ -234,7 +234,7 @@ function DashboardSection() {
   return (
     <section
       aria-labelledby="dashboard-heading"
-      className="mt-6 w-full lg:mt-10"
+      className="mt-12 w-full sm:mt-16"
     >
       <h2 id="dashboard-heading" className="sr-only">
         Product dashboard preview
@@ -251,7 +251,7 @@ type DashboardPreviewProps = {
 function DashboardPreview({ large }: DashboardPreviewProps) {
   return (
     <motion.div
-      className={`mt-10 w-full max-w-xl lg:mt-0 lg:max-w-none ${
+      className={`mt-6 w-full max-w-xl lg:mt-6 lg:max-w-none ${
         large ? "" : "hidden lg:block"
       }`}
       initial={{ opacity: 0, y: 32 }}
@@ -363,7 +363,7 @@ function DashboardPreview({ large }: DashboardPreviewProps) {
                     AI trading lane
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500">
-                    HBAR / USDT futures on Crypto.com, sized by pool risk
+                    CRONOS / USDT futures on Crypto.com, sized by pool risk
                     budget.
                   </CardDescription>
                 </CardHeader>
@@ -505,7 +505,7 @@ function FeaturesSection() {
   return (
     <motion.section
       id="about"
-      className="mt-16 space-y-8"
+      className="mt-16 space-y-8 sm:mt-24"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -546,7 +546,7 @@ function TestimonialsSection() {
     <motion.section
       id="blog"
       aria-labelledby="testimonials-heading"
-      className="mt-16 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]"
+      className="mt-16 grid gap-8 sm:mt-24 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
