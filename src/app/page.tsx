@@ -27,7 +27,7 @@ type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
 }
 
-const CRONOS_CHAIN_ID_HEX = "0x19"
+const CRONOS_CHAIN_ID_HEX = "0x152"
 
 async function connectWalletCronosEvm(): Promise<string | null> {
   if (typeof window === "undefined") {
@@ -44,6 +44,55 @@ async function connectWalletCronosEvm(): Promise<string | null> {
   let accounts: string[] = []
 
   try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: CRONOS_CHAIN_ID_HEX }],
+    })
+  } catch (switchError: unknown) {
+    const errorWithCode = switchError as { code?: number }
+    if (errorWithCode && errorWithCode.code === 4902) {
+      try {
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: CRONOS_CHAIN_ID_HEX,
+              chainName: "Cronos testnet",
+              nativeCurrency: {
+                name: "Cronos Testnet",
+                symbol: "tCRO",
+                decimals: 18,
+              },
+              rpcUrls: ["https://evm-t3.cronos.org"],
+              blockExplorerUrls: ["https://testnet.cronoscan.com"],
+            },
+          ],
+        })
+      } catch (addError: unknown) {
+        const message =
+          addError instanceof Error ? addError.message : "Unknown error"
+        alert(`Failed to add Cronos testnet: ${message}`)
+        return null
+      }
+    } else {
+      const message =
+        errorWithCode && typeof errorWithCode.code === "number"
+          ? `Error code ${errorWithCode.code}`
+          : "Unknown error"
+      alert(`Failed to switch to Cronos testnet: ${message}`)
+      return null
+    }
+  }
+
+  try {
+    const chainId = (await provider.request({
+      method: "eth_chainId",
+    })) as string
+    if (chainId.toLowerCase() !== CRONOS_CHAIN_ID_HEX.toLowerCase()) {
+      alert("Please switch MetaMask to Cronos testnet (chainId 338).")
+      return null
+    }
+
     accounts = (await provider.request({
       method: "eth_requestAccounts",
     })) as string[]
@@ -59,32 +108,8 @@ async function connectWalletCronosEvm(): Promise<string | null> {
       method: "wallet_switchEthereumChain",
       params: [{ chainId: CRONOS_CHAIN_ID_HEX }],
     })
-  } catch (switchError: unknown) {
-    const errorWithCode = switchError as { code?: number }
-    if (errorWithCode && errorWithCode.code === 4902) {
-      try {
-        await provider.request({
-          method: "wallet_addEthereumChain",
-          params: [
-            {
-              chainId: CRONOS_CHAIN_ID_HEX,
-              chainName: "Cronos",
-              nativeCurrency: {
-                name: "Cronos",
-                symbol: "CRO",
-                decimals: 18,
-              },
-              rpcUrls: ["https://evm.cronos.org"],
-              blockExplorerUrls: ["https://cronoscan.com"],
-            },
-          ],
-        })
-      } catch {
-        return null
-      }
-    } else {
-      return null
-    }
+  } catch {
+    return null
   }
   const [firstAccount] = accounts
   return firstAccount ?? null
