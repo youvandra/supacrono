@@ -86,7 +86,6 @@ export default function PoolPage() {
         <AITradingStatusSection />
         <CapitalDistributionSection />
         <PnlWaterfallSection />
-        <YourPositionSection />
         <ActivityAndRiskSection />
       </main>
     </div>
@@ -126,8 +125,8 @@ function PoolOverviewSection() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="max-w-xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:justify-between">
+        <div className="w-full sm:w-1/2 max-w-xl">
           <Badge className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800">
             Supacron pool overview
           </Badge>
@@ -139,9 +138,33 @@ function PoolOverviewSection() {
             and how profits and losses flow between Takers and Absorbers.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 sm:text-sm">
-          <MetricPill label="Chain" value="Cronos EVM" />
-          <MetricPill label="Roles" value="Takers & Absorbers" />
+        <div className="flex w-full flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-600 sm:w-1/2 sm:text-sm">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+            Your position
+          </p>
+          <p className="text-[11px] text-slate-500">
+            Connect a wallet on Cronos EVM to preview how your capital would sit
+            in the pool as a Taker or Absorber.
+          </p>
+          <div className="mt-1 grid gap-2 sm:grid-cols-3">
+            <MetricPill label="Role" value="Not connected" subtle />
+            <MetricPill label="Deposited" value="0.00 USDT" subtle />
+            <MetricPill label="Accrued yield" value="0.00 USDT" subtle />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button className="rounded-full px-4 text-[11px] font-medium">
+              Add capital
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-full border-slate-200 bg-white px-4 text-[11px] font-medium hover:bg-slate-50"
+            >
+              Withdraw
+            </Button>
+          </div>
+          <p className="text-[10px] text-slate-400">
+            In this prototype, these actions are illustrative only.
+          </p>
         </div>
       </div>
 
@@ -537,55 +560,6 @@ function PnlWaterfallSection() {
                 protecting yield-seeking capital.
               </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.section>
-  )
-}
-
-function YourPositionSection() {
-  return (
-    <motion.section
-      className="mt-10"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-    >
-      <Card className="border-slate-200 bg-white/95">
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">
-            Your position
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6 pt-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-3 text-xs">
-            <p className="text-slate-600">
-              Connect a wallet on Cronos EVM to preview how your capital would
-              sit in the pool as a Taker or Absorber.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MetricPill label="Role" value="Not connected" subtle />
-              <MetricPill label="Deposited" value="0.00 USDT" subtle />
-              <MetricPill label="Accrued yield" value="0.00 USDT" subtle />
-            </div>
-          </div>
-          <div className="flex flex-col items-start gap-2 text-xs md:items-end">
-            <div className="flex gap-2">
-              <Button className="rounded-full px-4 text-xs font-medium">
-                Add capital
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
-              >
-                Withdraw
-              </Button>
-            </div>
-            <p className="text-[11px] text-slate-500">
-              In this prototype, these actions are illustrative only.
-            </p>
           </div>
         </CardContent>
       </Card>
