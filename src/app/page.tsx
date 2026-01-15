@@ -111,6 +111,7 @@ export default function Home() {
 
 function SiteHeader() {
   const [account, setAccount] = useState<string | null>(null)
+  const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -176,15 +177,32 @@ function SiteHeader() {
 
         <div className="flex items-center gap-2">
           {account ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden rounded-full border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-slate-50 md:inline-flex"
-              aria-label="Connected wallet"
-            >
-              <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
-              {displayAccount}
-            </Button>
+            <div className="relative hidden md:inline-flex">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-slate-50"
+                aria-label="Connected wallet"
+                onClick={() => setIsWalletMenuOpen((open) => !open)}
+              >
+                <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
+                {displayAccount}
+              </Button>
+              {isWalletMenuOpen ? (
+                <div className="absolute right-0 top-full z-30 mt-2 w-40 rounded-lg border border-slate-200 bg-white py-1 text-xs shadow-lg">
+                  <button
+                    type="button"
+                    className="flex w-full items-center px-3 py-2 text-left text-slate-700 hover:bg-slate-50"
+                    onClick={() => {
+                      setAccount(null)
+                      setIsWalletMenuOpen(false)
+                    }}
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : (
             <Button
               variant="outline"
