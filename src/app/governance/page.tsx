@@ -24,7 +24,7 @@ type ProposalStatus = "upcoming" | "ended"
 
 type ProposalFilter = "all" | ProposalStatus
 
-type Proposal = {
+export type Proposal = {
   id: string
   title: string
   description: string
@@ -36,7 +36,7 @@ type Proposal = {
   docsUrl: string
 }
 
-const PROPOSALS: Proposal[] = [
+export const PROPOSALS: Proposal[] = [
   {
     id: "SP-01",
     title: "SP-01: Enable second trading lane",
@@ -47,7 +47,7 @@ const PROPOSALS: Proposal[] = [
     noVotes: 12,
     outcome: "pending",
     dateAdded: "2025-01-10",
-    docsUrl: "#",
+    docsUrl: "/governance/proposals/sp-01",
   },
   {
     id: "SP-02",
@@ -59,7 +59,7 @@ const PROPOSALS: Proposal[] = [
     noVotes: 22,
     outcome: "pending",
     dateAdded: "2025-01-14",
-    docsUrl: "#",
+    docsUrl: "/governance/proposals/sp-02",
   },
   {
     id: "SP-03",
@@ -71,7 +71,7 @@ const PROPOSALS: Proposal[] = [
     noVotes: 9,
     outcome: "pending",
     dateAdded: "2025-01-18",
-    docsUrl: "#",
+    docsUrl: "/governance/proposals/sp-03",
   },
   {
     id: "SP-00",
@@ -83,7 +83,7 @@ const PROPOSALS: Proposal[] = [
     noVotes: 4,
     outcome: "passed",
     dateAdded: "2024-12-01",
-    docsUrl: "#",
+    docsUrl: "/governance/proposals/sp-00",
   },
   {
     id: "SP-0X",
@@ -95,7 +95,7 @@ const PROPOSALS: Proposal[] = [
     noVotes: 96,
     outcome: "failed",
     dateAdded: "2024-12-10",
-    docsUrl: "#",
+    docsUrl: "/governance/proposals/sp-0x",
   },
 ]
 
@@ -185,7 +185,7 @@ async function connectWalletCronosEvm(): Promise<string | null> {
   return firstAccount ?? null
 }
 
-function SiteHeader() {
+export function SiteHeader() {
   const [account, setAccount] = useState<string | null>(null)
   const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false)
 
@@ -369,7 +369,7 @@ function GovernanceHero() {
   )
 }
 
-function FooterSection() {
+export function FooterSection() {
   return (
     <footer className="border-t border-slate-200 bg-white/70">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
