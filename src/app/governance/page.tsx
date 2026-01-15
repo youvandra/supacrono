@@ -344,24 +344,43 @@ function GovernanceHero() {
       </div>
       <div className="flex flex-col gap-3 sm:items-end">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">
-          Snapshot
+          Voting Power
         </p>
-        <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 sm:text-sm">
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Governance mode
+        <div className="flex w-full justify-end">
+          <div className="flex w-full max-w-xs flex-col items-start gap-3 text-xs text-slate-600 sm:items-end sm:text-sm">
+            <p className="text-right text-[11px] text-slate-500 sm:text-xs">
+              Want more influence on Supacron proposals? Mint SUPA to grow your
+              voting power.
             </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              Multisig council
-            </p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Chain
-            </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              Cronos EVM
-            </p>
+            <Button
+              asChild
+              size="sm"
+              className="h-7 self-end rounded-full bg-slate-900 px-3 text-[11px] font-medium text-white shadow-sm hover:bg-slate-800"
+              aria-label="Mint SUPA to increase your voting power"
+            >
+              <a href="/pool">
+                Mint SUPA
+                <ArrowUpRight className="ml-1.5 h-3 w-3" aria-hidden="true" />
+              </a>
+            </Button>
+            <div className="grid w-full grid-cols-2 gap-3 text-xs text-slate-600 sm:text-sm">
+              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                  Total power
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  1,240,000 SUPA
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                  Your power
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  Connect wallet 
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
