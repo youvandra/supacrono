@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight, PieChart, Wallet } from "lucide-react"
 
@@ -15,7 +15,99 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+type EthereumProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+}
+
+const CRONOS_CHAIN_ID_HEX = "0x19"
+
+async function connectWalletCronosEvm(): Promise<string | null> {
+  if (typeof window === "undefined") {
+    return null
+  }
+
+  const provider = (window as { ethereum?: EthereumProvider }).ethereum
+
+  if (!provider) {
+    alert("MetaMask is not available in this browser.")
+    return null
+  }
+
+  let accounts: string[] = []
+
+  try {
+    accounts = (await provider.request({
+      method: "eth_requestAccounts",
+    })) as string[]
+  } catch (requestError: unknown) {
+    const message =
+      requestError instanceof Error ? requestError.message : "Unknown error"
+    alert(`Failed to connect wallet: ${message}`)
+    return null
+  }
+
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: CRONOS_CHAIN_ID_HEX }],
+    })
+  } catch (switchError: unknown) {
+    const errorWithCode = switchError as { code?: number }
+    if (errorWithCode && errorWithCode.code === 4902) {
+      try {
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: CRONOS_CHAIN_ID_HEX,
+              chainName: "Cronos",
+              nativeCurrency: {
+                name: "Cronos",
+                symbol: "CRO",
+                decimals: 18,
+              },
+              rpcUrls: ["https://evm.cronos.org"],
+              blockExplorerUrls: ["https://cronoscan.com"],
+            },
+          ],
+        })
+      } catch {
+        return null
+      }
+    } else {
+      return null
+    }
+  }
+  const [firstAccount] = accounts
+  return firstAccount ?? null
+}
+
 function SiteHeader() {
+  const [account, setAccount] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const provider = (window as { ethereum?: EthereumProvider }).ethereum
+    if (!provider) {
+      return
+    }
+    provider
+      .request({ method: "eth_accounts" })
+      .then((result) => {
+        const accounts = result as string[]
+        const [first] = accounts
+        if (first) {
+          setAccount(first)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const displayAccount =
+    account && `${account.slice(0, 6)}...${account.slice(-4)}`
+
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/60 bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -56,14 +148,32 @@ function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 hover:bg-slate-50"
-          >
-            <Wallet className="mr-2 h-4 w-4" aria-hidden="true" />
-            Connect wallet
-          </Button>
+          {account ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+              aria-label="Connected wallet"
+            >
+              <span className="mr-2 h-2 w-2 rounded-full bg-emerald-500" />
+              {displayAccount}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 hover:bg-slate-50"
+              onClick={async () => {
+                const addr = await connectWalletCronosEvm()
+                if (addr) {
+                  setAccount(addr)
+                }
+              }}
+            >
+              <Wallet className="mr-2 h-4 w-4" aria-hidden="true" />
+              Connect wallet
+            </Button>
+          )}
         </div>
       </div>
     </header>
@@ -465,4 +575,3 @@ function MiniPerformanceChart() {
     />
   )
 }
-
