@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ArrowUpRight } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 type ProposalDetail = {
   longDescription: string
@@ -42,8 +42,8 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       "Enable a second trading lane focused on low-volatility basis trades for Absorber-focused capital. This lane would run with an independent daily risk budget and its own drawdown guardrails, while sharing the global pool limits.",
     options: [
       {
-        id: "for",
-        label: "For",
+        id: "yes",
+        label: "Yes",
         description:
           "Enable the second lane with the proposed risk budget and guardrails.",
       },
@@ -64,12 +64,12 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       {
         address: "0x4a1f...92b3",
         votingPower: "120,000 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x8c09...ee10",
         votingPower: "75,500 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x19d2...ab77",
@@ -88,7 +88,7 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       endTime: "2025-01-13 09:00 UTC",
       snapshot: "Cronos block #15,204,118",
       quorum: "250,000 VP",
-      result: "Quorum reached, majority For",
+      result: "Quorum reached, majority Yes",
     },
   },
   "sp-02": {
@@ -96,8 +96,8 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       "Temporarily tighten the daily risk budget from 2.5% to 2.0% of pool NAV while the AI model is retrained. This is intended as a conservative measure while new regimes are validated.",
     options: [
       {
-        id: "for",
-        label: "For",
+        id: "yes",
+        label: "Yes",
         description:
           "Reduce the daily risk budget to 2.0% of NAV until further notice.",
       },
@@ -118,12 +118,12 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       {
         address: "0x5f21...aa10",
         votingPower: "98,400 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x3c77...d004",
         votingPower: "54,200 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0xa102...44e9",
@@ -142,7 +142,7 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       endTime: "2025-01-17 12:00 UTC",
       snapshot: "Cronos block #15,309,882",
       quorum: "200,000 VP",
-      result: "Quorum reached, majority For",
+      result: "Quorum reached, majority Yes",
     },
   },
   "sp-03": {
@@ -150,8 +150,8 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       "Introduce time-based loyalty boosts for Absorber depositors that remain in the pool across multiple epochs. Boosts would increase target APY within the existing 8–12% band while keeping drawdown rails unchanged.",
     options: [
       {
-        id: "for",
-        label: "For",
+        id: "yes",
+        label: "Yes",
         description:
           "Introduce loyalty boosts with the proposed accrual schedule.",
       },
@@ -172,12 +172,12 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       {
         address: "0x9a01...bb21",
         votingPower: "64,800 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x22ee...c410",
         votingPower: "41,250 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0xd010...008a",
@@ -204,8 +204,8 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       "Define and launch the initial Supacron pool parameters, including drawdown limits, daily risk budgets, fee splits, and guardrails for AI trading. This is the genesis configuration for the protocol.",
     options: [
       {
-        id: "for",
-        label: "For",
+        id: "yes",
+        label: "Yes",
         description:
           "Approve the genesis configuration and launch the Supacron pool.",
       },
@@ -220,17 +220,17 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       {
         address: "0x11aa...ee01",
         votingPower: "140,000 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x52c3...78ff",
         votingPower: "96,000 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x88de...0042",
         votingPower: "14,000 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x39f0...c3aa",
@@ -252,8 +252,8 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       "Enable the governance MVP that hands control of core risk parameters and trading lanes to a multisig council. This proposal activates the governance contracts and associated permissions.",
     options: [
       {
-        id: "for",
-        label: "For",
+        id: "yes",
+        label: "Yes",
         description:
           "Enable the governance MVP and delegate control to the council.",
       },
@@ -274,7 +274,7 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       {
         address: "0x7abc...ff10",
         votingPower: "82,000 VP",
-        choice: "For",
+        choice: "Yes",
       },
       {
         address: "0x44de...c001",
@@ -289,7 +289,7 @@ const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
       {
         address: "0x120f...99a0",
         votingPower: "23,700 VP",
-        choice: "For",
+        choice: "Yes",
       },
     ],
     meta: {
@@ -397,7 +397,44 @@ export default function ProposalDetailPage() {
           </div>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <Card className="border-slate-200 bg-white/95">
+            <CardHeader className="border-b border-slate-100 pb-3">
+              <CardTitle className="text-sm font-semibold text-slate-900">
+                Voting options
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4 text-xs text-slate-600">
+              {detail.options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
+                >
+                  <div>
+                    <p className="text-xs font-semibold text-slate-900">
+                      {option.label}
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-600">
+                      {option.description}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
+                    aria-label={`Cast ${option.label} vote`}
+                  >
+                    Vote
+                  </Button>
+                </div>
+              ))}
+              <p className="mt-1 text-[11px] text-slate-500">
+                Voting actions are illustrative only for this Cronos hackathon
+                demo.
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="border-slate-200 bg-white/95">
             <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-sm font-semibold text-slate-900">
@@ -439,46 +476,9 @@ export default function ProposalDetailPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-slate-200 bg-white/95">
-            <CardHeader className="border-b border-slate-100 pb-3">
-              <CardTitle className="text-sm font-semibold text-slate-900">
-                Voting options
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-4 text-xs text-slate-600">
-              {detail.options.map((option) => (
-                <div
-                  key={option.id}
-                  className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
-                >
-                  <div>
-                    <p className="text-xs font-semibold text-slate-900">
-                      {option.label}
-                    </p>
-                    <p className="mt-1 text-[11px] text-slate-600">
-                      {option.description}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
-                    aria-label={`Cast ${option.label} vote`}
-                  >
-                    Vote
-                  </Button>
-                </div>
-              ))}
-              <p className="mt-1 text-[11px] text-slate-500">
-                Voting actions are illustrative only for this Cronos hackathon
-                demo.
-              </p>
-            </CardContent>
-          </Card>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <section className="mt-8">
           <Card className="border-slate-200 bg-white/95">
             <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-sm font-semibold text-slate-900">
@@ -509,30 +509,6 @@ export default function ProposalDetailPage() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200 bg-white/95">
-            <CardHeader className="border-b border-slate-100 pb-3">
-              <CardTitle className="text-sm font-semibold text-slate-900">
-                View on explorer
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-4 text-xs text-slate-600">
-              <p>
-                In a full deployment, this section would link to the on-chain
-                governance contracts and execution transactions for this
-                proposal.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
-                aria-label="Open governance explorer"
-              >
-                Open explorer
-                <ArrowUpRight className="ml-2 h-3 w-3" aria-hidden="true" />
-              </Button>
             </CardContent>
           </Card>
         </section>
