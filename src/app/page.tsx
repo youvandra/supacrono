@@ -23,6 +23,62 @@ import {
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+const CRONOS_CHAIN_ID_HEX = "0x19"
+
+async function connectWalletCronosEvm() {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  const w = window as any
+  const provider = w.ethereum
+
+  if (!provider || !provider.request) {
+    alert("MetaMask is not available in this browser.")
+    return
+  }
+
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: CRONOS_CHAIN_ID_HEX }],
+    })
+  } catch (switchError: any) {
+    if (switchError && switchError.code === 4902) {
+      try {
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: CRONOS_CHAIN_ID_HEX,
+              chainName: "Cronos",
+              nativeCurrency: {
+                name: "Cronos",
+                symbol: "CRO",
+                decimals: 18,
+              },
+              rpcUrls: ["https://evm.cronos.org"],
+              blockExplorerUrls: ["https://cronoscan.com"],
+            },
+          ],
+        })
+      } catch {
+        return
+      }
+    } else {
+      return
+    }
+  }
+
+  try {
+    await provider.request({
+      method: "eth_requestAccounts",
+    })
+  } catch {
+    return
+  }
+}
+
 /**
  * Home renders the marketing landing page for the Superior business platform.
  */
@@ -74,9 +130,12 @@ function SiteHeader() {
           >
             Pool
           </a>
-          <span className="text-sm font-medium text-slate-400 rounded-full px-2 py-1">
+          <a
+            href="/portfolio"
+            className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 rounded-full px-2 py-1"
+          >
             Portfolio
-          </span>
+          </a>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -211,7 +270,12 @@ function FooterSection() {
             <a href="/pool" className="transition-colors hover:text-slate-900">
               Pool
             </a>
-            <span>Portfolio</span>
+            <a
+              href="/portfolio"
+              className="transition-colors hover:text-slate-900"
+            >
+              Portfolio
+            </a>
           </div>
         </div>
       </div>
