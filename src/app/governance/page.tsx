@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -20,6 +19,85 @@ type EthereumProvider = {
 }
 
 const CRONOS_CHAIN_ID_HEX = "0x152"
+
+type ProposalStatus = "upcoming" | "ended"
+
+type ProposalFilter = "all" | ProposalStatus
+
+type Proposal = {
+  id: string
+  title: string
+  description: string
+  status: ProposalStatus
+  yesVotes: number
+  noVotes: number
+  outcome: "pending" | "passed" | "failed"
+  dateAdded: string
+  docsUrl: string
+}
+
+const PROPOSALS: Proposal[] = [
+  {
+    id: "SP-01",
+    title: "SP-01: Enable second trading lane",
+    description:
+      "Add a low-volatility basis trade lane for Absorber-focused capital with separate risk budget.",
+    status: "upcoming",
+    yesVotes: 128,
+    noVotes: 12,
+    outcome: "pending",
+    dateAdded: "2025-01-10",
+    docsUrl: "#",
+  },
+  {
+    id: "SP-02",
+    title: "SP-02: Tighten daily risk budget",
+    description:
+      "Reduce the daily risk budget to 2.0% of pool NAV while the AI model is retrained.",
+    status: "upcoming",
+    yesVotes: 94,
+    noVotes: 22,
+    outcome: "pending",
+    dateAdded: "2025-01-14",
+    docsUrl: "#",
+  },
+  {
+    id: "SP-03",
+    title: "SP-03: Introduce loyalty boosts",
+    description:
+      "Boost Absorber yield for depositors that remain in the pool across multiple epochs.",
+    status: "upcoming",
+    yesVotes: 76,
+    noVotes: 9,
+    outcome: "pending",
+    dateAdded: "2025-01-18",
+    docsUrl: "#",
+  },
+  {
+    id: "SP-00",
+    title: "SP-00: Launch initial pool parameters",
+    description:
+      "Set initial drawdown limits, daily risk budgets, and fee splits for the Supacron pool.",
+    status: "ended",
+    yesVotes: 310,
+    noVotes: 4,
+    outcome: "passed",
+    dateAdded: "2024-12-01",
+    docsUrl: "#",
+  },
+  {
+    id: "SP-0X",
+    title: "SP-0X: Enable governance MVP",
+    description:
+      "Deploy multisig governance with authority over risk parameters and trading lanes.",
+    status: "ended",
+    yesVotes: 145,
+    noVotes: 96,
+    outcome: "failed",
+    dateAdded: "2024-12-10",
+    docsUrl: "#",
+  },
+]
 
 async function connectWalletCronosEvm(): Promise<string | null> {
   if (typeof window === "undefined") {
@@ -260,7 +338,7 @@ function GovernanceHero() {
           Governance steers the Supacron pool by setting drawdown limits,
           configuring circuit breakers, and defining how PnL waterfalls between
           Takers and Absorbers. This page summarizes the current parameters and
-          upcoming changes.
+          ongoing changes.
         </p>
       </div>
       <div className="flex flex-col gap-3 sm:items-end">
@@ -291,58 +369,139 @@ function GovernanceHero() {
 }
 
 function GovernanceGrid() {
+  const [filter, setFilter] = useState<ProposalFilter>("upcoming")
+
+  const filteredProposals =
+    filter === "all"
+      ? PROPOSALS
+      : PROPOSALS.filter((proposal) => proposal.status === filter)
+
   return (
     <section className="mt-10 space-y-6">
       <Card className="border-slate-200 bg-white/90">
         <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">
-            Upcoming proposals
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-sm font-semibold text-slate-900">
+              Proposals
+            </CardTitle>
+            <div className="inline-flex rounded-full bg-slate-100 p-0.5 text-[11px]">
+              {(["all", "upcoming", "ended"] as ProposalFilter[]).map((value) => {
+                const isActive = filter === value
+                const label =
+                  value === "all"
+                    ? "All"
+                    : value === "upcoming"
+                    ? "Ongoing"
+                    : "Ended"
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFilter(value)}
+                    className={`rounded-full px-3 py-1 font-medium transition-colors ${
+                      isActive
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-500 hover:text-slate-900"
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-4 text-sm text-slate-600">
-          <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-semibold text-slate-900">
-              SP-01: Enable second trading lane
-            </p>
-            <p className="text-xs">
-              Add a low-volatility basis trade lane for Absorber-focused
-              capital with separate risk budget.
-            </p>
-          </div>
-          <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-semibold text-slate-900">
-              SP-02: Tighten daily risk budget
-            </p>
-            <p className="text-xs">
-              Reduce the daily risk budget to 2.0% of pool NAV while the AI
-              model is retrained.
-            </p>
-          </div>
-          <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-semibold text-slate-900">
-              SP-03: Introduce loyalty boosts
-            </p>
-            <p className="text-xs">
-              Boost Absorber yield for depositors that remain in the pool across
-              multiple epochs.
-            </p>
-          </div>
+          {filteredProposals.map((proposal) => {
+            const statusLabel =
+              proposal.status === "upcoming"
+                ? "Ongoing"
+                : proposal.outcome === "passed"
+                ? "Ended · Passed"
+                : proposal.outcome === "failed"
+                ? "Ended · Failed"
+                : "Ended"
+            const statusDotColor =
+              proposal.status === "upcoming"
+                ? "bg-slate-700"
+                : proposal.outcome === "passed"
+                ? "bg-emerald-500"
+                : proposal.outcome === "failed"
+                ? "bg-rose-500"
+                : "bg-slate-500"
+            return (
+              <div
+                key={proposal.id}
+                className="space-y-1 rounded-lg bg-slate-50 px-3 py-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-slate-900">
+                    {proposal.title}
+                  </p>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700"
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${statusDotColor}`}
+                    />
+                    {statusLabel}
+                  </span>
+                </div>
+                <p className="text-xs">{proposal.description}</p>
+                {(() => {
+                  const totalVotes = proposal.yesVotes + proposal.noVotes
+                  const yesPercent =
+                    totalVotes === 0
+                      ? 0
+                      : Math.round((proposal.yesVotes / totalVotes) * 100)
+                  const noPercent = 100 - yesPercent
+                  return (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <p className="font-medium text-emerald-700">
+                          Yes {yesPercent}% ({proposal.yesVotes})
+                        </p>
+                        <p className="font-medium text-rose-700">
+                          Against {noPercent}% ({proposal.noVotes})
+                        </p>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className="flex h-2 w-full">
+                          <div
+                            className="h-2 bg-emerald-500"
+                            style={{ width: `${yesPercent}%` }}
+                          />
+                          <div
+                            className="h-2 bg-rose-400"
+                            style={{ width: `${noPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+                <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
+                  <p className="text-slate-500">
+                    Ended on {proposal.dateAdded}
+                  </p>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
+                    aria-label={`Open docs for ${proposal.id}`}
+                  >
+                    <a href={proposal.docsUrl}>
+                      View proposal
+                      <ArrowUpRight className="ml-1.5 h-3 w-3" aria-hidden="true" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )
+          })}
         </CardContent>
-        <CardFooter className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
-          <div>
-            <p className="font-medium text-slate-900">Governance docs</p>
-            <p>View the full specification for Supacron governance and roles.</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
-            aria-label="Open governance documentation"
-          >
-            Open docs
-            <ArrowUpRight className="ml-2 h-3 w-3" aria-hidden="true" />
-          </Button>
-        </CardFooter>
       </Card>
     </section>
   )
