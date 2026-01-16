@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { SUPA_ABI, SUPA_CONTRACT_ADDRESS } from "@/lib/smart-contract/supa"
+import { supabase } from "@/lib/supabaseClient"
 
 type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
@@ -107,6 +108,37 @@ export const PROPOSALS: Proposal[] = [
     docsUrl: "/governance/proposals/sp-0x",
   },
 ]
+
+type DbProposal = {
+  id: string
+  short_id: string
+  title: string
+  description: string
+  status: ProposalStatus
+  outcome: "pending" | "passed" | "failed"
+  docs_url: string | null
+  end_time: string | null
+  quorum: number | null
+  created_at: string
+}
+
+function formatProposalDate(value: string | null) {
+  if (!value) {
+    return null
+  }
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+  return parsed.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+}
 
 async function getConnectedAccount(): Promise<string | null> {
   if (typeof window === "undefined") {
@@ -723,12 +755,54 @@ export function FooterSection() {
 }
 
 function GovernanceGrid() {
+  const [proposals, setProposals] = useState<DbProposal[] | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [filter, setFilter] = useState<ProposalFilter>("upcoming")
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadProposals() {
+      setIsLoading(true)
+      setLoadError(null)
+      try {
+        const { data, error } = await supabase
+          .from("proposals")
+          .select("*")
+          .order("created_at", { ascending: false })
+
+        if (cancelled) {
+          return
+        }
+
+        if (error) {
+          setLoadError("Failed to load proposals.")
+          return
+        }
+
+        setProposals((data ?? []) as DbProposal[])
+      } finally {
+        if (cancelled) {
+          return
+        }
+        setIsLoading(false)
+      }
+    }
+
+    loadProposals()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const filteredProposals =
-    filter === "all"
-      ? PROPOSALS
-      : PROPOSALS.filter((proposal) => proposal.status === filter)
+    proposals === null
+      ? []
+      : filter === "all"
+      ? proposals
+      : proposals.filter((proposal) => proposal.status === filter)
 
   return (
     <section className="mt-10 space-y-6">
@@ -767,94 +841,95 @@ function GovernanceGrid() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-4 text-sm text-slate-600">
-          {filteredProposals.map((proposal) => {
-            const statusLabel =
-              proposal.status === "upcoming"
-                ? "Ongoing"
-                : proposal.outcome === "passed"
-                ? "Ended · Passed"
-                : proposal.outcome === "failed"
-                ? "Ended · Failed"
-                : "Ended"
-            const statusDotColor =
-              proposal.status === "upcoming"
-                ? "bg-slate-700"
-                : proposal.outcome === "passed"
-                ? "bg-emerald-500"
-                : proposal.outcome === "failed"
-                ? "bg-rose-500"
-                : "bg-slate-500"
-            return (
-              <div
-                key={proposal.id}
-                className="space-y-1 rounded-lg bg-slate-50 px-3 py-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-slate-900">
-                    {proposal.title}
-                  </p>
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700"
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${statusDotColor}`}
-                    />
-                    {statusLabel}
-                  </span>
-                </div>
-                <p className="text-xs">{proposal.description}</p>
-                {(() => {
-                  const totalVotes = proposal.yesVotes + proposal.noVotes
-                  const yesPercent =
-                    totalVotes === 0
-                      ? 0
-                      : Math.round((proposal.yesVotes / totalVotes) * 100)
-                  const noPercent = 100 - yesPercent
-                  return (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <p className="font-medium text-emerald-700">
-                          Yes {yesPercent}%
-                        </p>
-                        <p className="font-medium text-rose-700">
-                          Against {noPercent}%
-                        </p>
-                      </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-                        <div className="flex h-2 w-full">
-                          <div
-                            className="h-2 bg-emerald-500"
-                            style={{ width: `${yesPercent}%` }}
-                          />
-                          <div
-                            className="h-2 bg-rose-400"
-                            style={{ width: `${noPercent}%` }}
-                          />
-                        </div>
-                      </div>
+          {isLoading ? (
+            <p className="text-xs text-slate-500">Loading proposals...</p>
+          ) : loadError ? (
+            <p className="text-xs text-rose-600">{loadError}</p>
+          ) : filteredProposals.length === 0 ? (
+            <p className="text-xs text-slate-500">
+              No proposals found. Create one to get started.
+            </p>
+          ) : (
+            filteredProposals.map((proposal) => {
+              const statusLabel =
+                proposal.status === "upcoming"
+                  ? "Ongoing"
+                  : proposal.outcome === "passed"
+                  ? "Ended · Passed"
+                  : proposal.outcome === "failed"
+                  ? "Ended · Failed"
+                  : "Ended"
+              const statusDotColor =
+                proposal.status === "upcoming"
+                  ? "bg-slate-700"
+                  : proposal.outcome === "passed"
+                  ? "bg-emerald-500"
+                  : proposal.outcome === "failed"
+                  ? "bg-rose-500"
+                  : "bg-slate-500"
+
+              const endTimeLabel = formatProposalDate(proposal.end_time)
+              const createdAtLabel = formatProposalDate(proposal.created_at)
+
+              return (
+                <div
+                  key={proposal.id}
+                  className="space-y-1 rounded-lg bg-slate-50 px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wide text-white">
+                        {proposal.short_id}
+                      </span>
+                      <p className="text-xs font-semibold text-slate-900">
+                        {proposal.title}
+                      </p>
                     </div>
-                  )
-                })()}
-                <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
-                  <p className="text-slate-500">
-                    Ended on {proposal.dateAdded}
-                  </p>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
-                    aria-label={`Open docs for ${proposal.id}`}
-                  >
-                    <a href={proposal.docsUrl}>
-                      View proposal
-                      <ArrowUpRight className="ml-1.5 h-3 w-3" aria-hidden="true" />
-                    </a>
-                  </Button>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${statusDotColor}`}
+                      />
+                      {statusLabel}
+                    </span>
+                  </div>
+                  <p className="text-xs">{proposal.description}</p>
+                  <div className="mt-2 grid gap-2 text-[11px] text-slate-500 sm:grid-cols-2">
+                    <p>
+                      {endTimeLabel
+                        ? `Ends on ${endTimeLabel}`
+                        : createdAtLabel
+                        ? `Created on ${createdAtLabel}`
+                        : null}
+                    </p>
+                    {proposal.quorum ? (
+                      <p className="sm:text-right">
+                        Quorum: {proposal.quorum.toString()}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="mt-3 flex items-center justify-end gap-2 text-[11px]">
+                    {proposal.docs_url ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
+                        aria-label={`Open docs for ${proposal.short_id}`}
+                      >
+                        <a href={proposal.docs_url}>
+                          View proposal
+                          <ArrowUpRight
+                            className="ml-1.5 h-3 w-3"
+                            aria-hidden="true"
+                          />
+                        </a>
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </CardContent>
       </Card>
     </section>
