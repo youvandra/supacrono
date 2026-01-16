@@ -4,6 +4,13 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight, Wallet } from "lucide-react"
+import {
+  BrowserProvider,
+  Contract,
+  JsonRpcProvider,
+  formatUnits,
+  type Eip1193Provider,
+} from "ethers"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,12 +20,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { SUPA_ABI, SUPA_CONTRACT_ADDRESS } from "@/lib/supa"
 
 type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
 }
 
 const CRONOS_CHAIN_ID_HEX = "0x152"
+const RPC_PROVIDER = new JsonRpcProvider("https://evm-t3.cronos.org")
 
 type ProposalStatus = "upcoming" | "ended"
 
@@ -98,6 +107,35 @@ export const PROPOSALS: Proposal[] = [
     docsUrl: "/governance/proposals/sp-0x",
   },
 ]
+
+async function getConnectedAccount(): Promise<string | null> {
+  if (typeof window === "undefined") {
+    return null
+  }
+
+  const provider = (window as { ethereum?: EthereumProvider }).ethereum
+
+  if (!provider) {
+    return null
+  }
+
+  const accounts = (await provider.request({
+    method: "eth_accounts",
+  })) as string[]
+
+  const [first] = accounts
+  return first ?? null
+}
+
+function formatTokenAmount(value: string) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) {
+    return value
+  }
+  return numeric.toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+  })
+}
 
 async function connectWalletCronosEvm(): Promise<string | null> {
   if (typeof window === "undefined") {
@@ -321,6 +359,178 @@ export default function GovernancePage() {
 }
 
 function GovernanceHero() {
+  const [totalPower, setTotalPower] = useState<string | null>(null)
+  const [isLoadingTotalPower, setIsLoadingTotalPower] = useState(false)
+  const [account, setAccount] = useState<string | null>(null)
+  const [yourPower, setYourPower] = useState<string | null>(null)
+  const [isLoadingYourPower, setIsLoadingYourPower] = useState(false)
+  const [isMintOpen, setIsMintOpen] = useState(false)
+  const [isMinting, setIsMinting] = useState(false)
+  const [mintError, setMintError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadTotalPower() {
+      setIsLoadingTotalPower(true)
+      try {
+        const contract = new Contract(
+          SUPA_CONTRACT_ADDRESS,
+          SUPA_ABI,
+          RPC_PROVIDER
+        )
+        const [supply, decimals] = await Promise.all([
+          contract.totalSupply(),
+          contract.decimals(),
+        ])
+        if (cancelled) {
+          return
+        }
+        const formatted = formatUnits(supply, decimals)
+        setTotalPower(formatTokenAmount(formatted))
+      } catch {
+        if (cancelled) {
+          return
+        }
+        setTotalPower(null)
+      } finally {
+        if (cancelled) {
+          return
+        }
+        setIsLoadingTotalPower(false)
+      }
+    }
+
+    loadTotalPower()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function initAccount() {
+      const existing = await getConnectedAccount()
+      if (cancelled) {
+        return
+      }
+      if (existing) {
+        setAccount(existing)
+      }
+    }
+
+    initAccount()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!account) {
+      setYourPower(null)
+      return
+    }
+
+    let cancelled = false
+
+    async function loadYourPower() {
+      setIsLoadingYourPower(true)
+      try {
+        const contract = new Contract(
+          SUPA_CONTRACT_ADDRESS,
+          SUPA_ABI,
+          RPC_PROVIDER
+        )
+        const [balance, decimals] = await Promise.all([
+          contract.balanceOf(account),
+          contract.decimals(),
+        ])
+        if (cancelled) {
+          return
+        }
+        const formatted = formatUnits(balance, decimals)
+        setYourPower(formatTokenAmount(formatted))
+      } catch {
+        if (cancelled) {
+          return
+        }
+        setYourPower(null)
+      } finally {
+        if (cancelled) {
+          return
+        }
+        setIsLoadingYourPower(false)
+      }
+    }
+
+    loadYourPower()
+
+    return () => {
+      cancelled = true
+    }
+  }, [account])
+
+  async function handleMint() {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    try {
+      setMintError(null)
+      setIsMinting(true)
+
+      let activeAccount = account
+      if (!activeAccount) {
+        const addr = await connectWalletCronosEvm()
+        if (!addr) {
+          setIsMinting(false)
+          return
+        }
+        activeAccount = addr
+        setAccount(addr)
+      }
+
+      const provider = (window as { ethereum?: EthereumProvider }).ethereum
+      if (!provider) {
+        alert("MetaMask is not available in this browser.")
+        setIsMinting(false)
+        return
+      }
+      const browserProvider = new BrowserProvider(
+        provider as unknown as Eip1193Provider
+      )
+      const signer = await browserProvider.getSigner()
+      const contract = new Contract(SUPA_CONTRACT_ADDRESS, SUPA_ABI, signer)
+
+      const tx = await contract.mint()
+      await tx.wait()
+
+      const [balance, decimals, supply] = await Promise.all([
+        contract.balanceOf(activeAccount),
+        contract.decimals(),
+        contract.totalSupply(),
+      ])
+
+      const formattedBalance = formatTokenAmount(
+        formatUnits(balance, decimals)
+      )
+      const formattedSupply = formatTokenAmount(formatUnits(supply, decimals))
+
+      setYourPower(formattedBalance)
+      setTotalPower(formattedSupply)
+      setIsMintOpen(false)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to mint SUPA."
+      setMintError(message)
+    } finally {
+      setIsMinting(false)
+    }
+  }
+
   return (
     <motion.section
       className="flex flex-col gap-6 border-b border-slate-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between"
@@ -348,20 +558,18 @@ function GovernanceHero() {
         </p>
         <div className="flex w-full justify-end">
           <div className="flex w-full max-w-xs flex-col items-start gap-3 text-xs text-slate-600 sm:items-end sm:text-sm">
-            <p className="text-right text-[11px] text-slate-500 sm:text-xs">
+          <p className="text-right text-[11px] text-slate-500 sm:text-xs">
               Want more influence on Supacron proposals? Mint SUPA to grow your
               voting power.
             </p>
             <Button
-              asChild
               size="sm"
               className="h-7 self-end rounded-full bg-slate-900 px-3 text-[11px] font-medium text-white shadow-sm hover:bg-slate-800"
               aria-label="Mint SUPA to increase your voting power"
+              onClick={() => setIsMintOpen(true)}
             >
-              <a href="/pool">
-                Mint SUPA
-                <ArrowUpRight className="ml-1.5 h-3 w-3" aria-hidden="true" />
-              </a>
+              Mint SUPA
+              <ArrowUpRight className="ml-1.5 h-3 w-3" aria-hidden="true" />
             </Button>
             <div className="grid w-full grid-cols-2 gap-3 text-xs text-slate-600 sm:text-sm">
               <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
@@ -369,7 +577,11 @@ function GovernanceHero() {
                   Total power
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                  1,240,000 SUPA
+                  {isLoadingTotalPower
+                    ? "Loading..."
+                    : totalPower
+                    ? `${totalPower} SUPA`
+                    : "—"}
                 </p>
               </div>
               <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
@@ -377,13 +589,94 @@ function GovernanceHero() {
                   Your power
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                  Connect wallet 
+                  {account
+                    ? isLoadingYourPower
+                      ? "Loading..."
+                      : yourPower
+                      ? `${yourPower} SUPA`
+                      : "0 SUPA"
+                    : "Connect wallet"}
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+      {isMintOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-lg">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Mint SUPA
+                </h2>
+                <p className="mt-1 text-xs text-slate-600">
+                  Mint your initial SUPA allocation on Cronos testnet to
+                  activate governance power.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="text-xs text-slate-500 hover:text-slate-700"
+                onClick={() => {
+                  if (!isMinting) {
+                    setIsMintOpen(false)
+                  }
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 space-y-3 text-xs text-slate-600">
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <span className="font-medium text-slate-700">
+                  Connected wallet
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {account
+                    ? `${account.slice(0, 6)}...${account.slice(-4)}`
+                    : "Not connected"}
+                </span>
+              </div>
+              {!account ? (
+                <Button
+                  size="sm"
+                  className="mt-1 w-full rounded-full bg-slate-900 text-[11px] font-medium text-white shadow-sm hover:bg-slate-800"
+                  onClick={async () => {
+                    const addr = await connectWalletCronosEvm()
+                    if (addr) {
+                      setAccount(addr)
+                    }
+                  }}
+                >
+                  <Wallet className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+                  Connect wallet
+                </Button>
+              ) : null}
+              <div className="rounded-lg bg-slate-50 px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                  After minting
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Your SUPA balance and total governance power on this page will
+                  update once the transaction confirms.
+                </p>
+              </div>
+              {mintError ? (
+                <p className="text-[11px] text-rose-600">{mintError}</p>
+              ) : null}
+            </div>
+            <Button
+              size="sm"
+              className="mt-4 w-full rounded-full bg-slate-900 text-[11px] font-medium text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isMinting || !account}
+              onClick={handleMint}
+            >
+              {isMinting ? "Minting..." : "Mint SUPA"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </motion.section>
   )
 }

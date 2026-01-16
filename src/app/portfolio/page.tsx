@@ -107,29 +107,14 @@ async function connectWalletCronosEvm(): Promise<string | null> {
   return firstAccount ?? null
 }
 
-function SiteHeader() {
-  const [account, setAccount] = useState<string | null>(null)
-  const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false)
+type SiteHeaderProps = {
+  account: string | null
+  onConnect: () => void | Promise<void>
+  onDisconnect: () => void
+}
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-    const provider = (window as { ethereum?: EthereumProvider }).ethereum
-    if (!provider) {
-      return
-    }
-    provider
-      .request({ method: "eth_accounts" })
-      .then((result) => {
-        const accounts = result as string[]
-        const [first] = accounts
-        if (first) {
-          setAccount(first)
-        }
-      })
-      .catch(() => {})
-  }, [])
+function SiteHeader({ account, onConnect, onDisconnect }: SiteHeaderProps) {
+  const [isWalletMenuOpen, setIsWalletMenuOpen] = useState(false)
 
   const displayAccount =
     account && `${account.slice(0, 6)}...${account.slice(-4)}`
@@ -192,7 +177,7 @@ function SiteHeader() {
                     type="button"
                     className="flex w-full items-center px-3 py-2 text-left text-slate-700 hover:bg-slate-50"
                     onClick={() => {
-                      setAccount(null)
+                      onDisconnect()
                       setIsWalletMenuOpen(false)
                     }}
                   >
@@ -207,10 +192,7 @@ function SiteHeader() {
               size="sm"
               className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium text-slate-900 hover:bg-slate-50"
               onClick={async () => {
-                const addr = await connectWalletCronosEvm()
-                if (addr) {
-                  setAccount(addr)
-                }
+                await onConnect()
               }}
             >
               <Wallet className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -224,15 +206,86 @@ function SiteHeader() {
 }
 
 export default function PortfolioPage() {
+  const [account, setAccount] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const provider = (window as { ethereum?: EthereumProvider }).ethereum
+    if (!provider) {
+      return
+    }
+    provider
+      .request({ method: "eth_accounts" })
+      .then((result) => {
+        const accounts = result as string[]
+        const [first] = accounts
+        if (first) {
+          setAccount(first)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const isConnected = !!account
+
+  const handleConnect = async () => {
+    const addr = await connectWalletCronosEvm()
+    if (addr) {
+      setAccount(addr)
+    }
+  }
+
+  const handleDisconnect = () => {
+    setAccount(null)
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
-      <SiteHeader />
-      <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-8">
-        <PortfolioOverviewSection />
-        <RoleBreakdownSection />
-        <PerformanceAndRiskSection />
-        <ActivitySection />
-      </main>
+      <SiteHeader
+        account={account}
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
+      />
+      {isConnected ? (
+        <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-8">
+          <PortfolioOverviewSection />
+          <RoleBreakdownSection />
+          <PerformanceAndRiskSection />
+          <ActivitySection />
+        </main>
+      ) : (
+        <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col items-center justify-center px-4 pb-16 pt-10 text-center sm:px-6 lg:px-8">
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="w-full max-w-md space-y-4"
+          >
+            <Badge className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800">
+              Wallet required
+            </Badge>
+            <h1 className="text-balance text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+              Connect your wallet to see your Supacron portfolio.
+            </h1>
+            <p className="text-sm leading-relaxed text-slate-600">
+              Link a Cronos EVM wallet to view your Taker and Absorber balances,
+              yield, and risk metrics in one place.
+            </p>
+            <div className="mt-4 flex justify-center">
+              <Button
+                size="sm"
+                className="inline-flex items-center rounded-full bg-slate-900 px-4 text-xs font-medium text-white shadow-sm hover:bg-slate-800"
+                onClick={handleConnect}
+              >
+                <Wallet className="mr-2 h-4 w-4" aria-hidden="true" />
+                Connect wallet
+              </Button>
+            </div>
+          </motion.section>
+        </main>
+      )}
       <FooterSection />
     </div>
   )
