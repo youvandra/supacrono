@@ -27,8 +27,8 @@ type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
 }
 
-const CRONOS_CHAIN_ID_HEX = "0x152"
-const RPC_PROVIDER = new JsonRpcProvider("https://evm-t3.cronos.org")
+export const CRONOS_CHAIN_ID_HEX = "0x152"
+export const RPC_PROVIDER = new JsonRpcProvider("https://evm-t3.cronos.org")
 
 type ProposalStatus = "upcoming" | "ended"
 
@@ -120,6 +120,9 @@ type DbProposal = {
   end_time: string | null
   quorum: number | null
   created_at: string
+  yes_votes: number | null
+  no_votes: number | null
+  abstain_votes: number | null
 }
 
 function formatProposalDate(value: string | null) {
@@ -140,7 +143,7 @@ function formatProposalDate(value: string | null) {
   })
 }
 
-async function getConnectedAccount(): Promise<string | null> {
+export async function getConnectedAccount(): Promise<string | null> {
   if (typeof window === "undefined") {
     return null
   }
@@ -159,7 +162,7 @@ async function getConnectedAccount(): Promise<string | null> {
   return first ?? null
 }
 
-function formatTokenAmount(value: string) {
+export function formatTokenAmount(value: string) {
   const numeric = Number(value)
   if (!Number.isFinite(numeric)) {
     return value
@@ -169,7 +172,7 @@ function formatTokenAmount(value: string) {
   })
 }
 
-async function connectWalletCronosEvm(): Promise<string | null> {
+export async function connectWalletCronosEvm(): Promise<string | null> {
   if (typeof window === "undefined") {
     return null
   }
@@ -907,24 +910,46 @@ function GovernanceGrid() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="mt-3 flex items-center justify-end gap-2 text-[11px]">
-                    {proposal.docs_url ? (
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
-                        aria-label={`Open docs for ${proposal.short_id}`}
+                  <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                      {(() => {
+                        const yes = Number(proposal.yes_votes ?? 0)
+                        const no = Number(proposal.no_votes ?? 0)
+                        const total = yes + no
+                        if (total === 0) {
+                          return <span>No votes yet</span>
+                        }
+                        const yesPercent = Math.round((yes / total) * 100)
+                        const noPercent = 100 - yesPercent
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-emerald-700">
+                              Yes {yesPercent}%
+                            </span>
+                            <span className="font-medium text-rose-700">
+                              Against {noPercent}%
+                            </span>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
+                      aria-label={`Open details for ${proposal.short_id}`}
+                    >
+                      <Link
+                        href={`/governance/proposals/${proposal.short_id.toLowerCase()}`}
                       >
-                        <a href={proposal.docs_url}>
-                          View proposal
-                          <ArrowUpRight
-                            className="ml-1.5 h-3 w-3"
-                            aria-hidden="true"
-                          />
-                        </a>
-                      </Button>
-                    ) : null}
+                        View proposal
+                        <ArrowUpRight
+                          className="ml-1.5 h-3 w-3"
+                          aria-hidden="true"
+                        />
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               )
