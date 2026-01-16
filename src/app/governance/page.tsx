@@ -523,9 +523,13 @@ function GovernanceHero() {
       setTotalPower(formattedSupply)
       setIsMintOpen(false)
     } catch (error) {
-      const message =
+      const rawMessage =
         error instanceof Error ? error.message : "Failed to mint SUPA."
-      setMintError(message)
+      if (rawMessage.includes("Already minted")) {
+        setMintError("Only can mint once")
+      } else {
+        setMintError("Failed to mint SUPA.")
+      }
     } finally {
       setIsMinting(false)
     }
