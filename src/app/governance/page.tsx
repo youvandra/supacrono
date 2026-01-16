@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { SUPA_ABI, SUPA_CONTRACT_ADDRESS } from "@/lib/supa"
+import { SUPA_ABI, SUPA_CONTRACT_ADDRESS } from "@/lib/smart-contract/supa"
 
 type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
