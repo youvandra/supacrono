@@ -2,327 +2,362 @@
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { Contract, formatUnits } from "ethers"
+import { ArrowLeft } from "lucide-react"
 
-import {
-  PROPOSALS,
-  type Proposal,
-  SiteHeader,
-  FooterSection,
-} from "../../page"
+import { supabase } from "@/lib/supabaseClient"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft } from "lucide-react"
+import {
+  FooterSection,
+  RPC_PROVIDER,
+  SiteHeader,
+  connectWalletCronosEvm,
+  formatProposalDate,
+  getConnectedAccount,
+  type DbProposal,
+} from "../../page"
+import { SUPA_ABI, SUPA_CONTRACT_ADDRESS } from "@/lib/smart-contract/supa"
 
-type ProposalDetail = {
-  longDescription: string
-  options: {
-    id: string
-    label: string
-    description: string
-  }[]
-  voters: {
-    address: string
-    votingPower: string
-    choice: string
-  }[]
-  meta: {
-    proposer: string
-    startTime: string
-    endTime: string
-    snapshot: string
-    quorum: string
-    result: string
-  }
-}
+type Choice = "yes" | "no" | "abstain"
 
-const PROPOSAL_DETAILS: Record<string, ProposalDetail> = {
-  "sp-01": {
-    longDescription:
-      "Enable a second trading lane focused on low-volatility basis trades for Absorber-focused capital. This lane would run with an independent daily risk budget and its own drawdown guardrails, while sharing the global pool limits.",
-    options: [
-      {
-        id: "yes",
-        label: "Yes",
-        description:
-          "Enable the second lane with the proposed risk budget and guardrails.",
-      },
-      {
-        id: "against",
-        label: "Against",
-        description:
-          "Do not enable the second lane; keep the single-lane configuration.",
-      },
-      {
-        id: "abstain",
-        label: "Abstain",
-        description:
-          "Record presence without affecting the outcome of the proposal.",
-      },
-    ],
-    voters: [
-      {
-        address: "0x4a1f...92b3",
-        votingPower: "120,000 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x8c09...ee10",
-        votingPower: "75,500 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x19d2...ab77",
-        votingPower: "32,000 VP",
-        choice: "Against",
-      },
-      {
-        address: "0x7b33...c901",
-        votingPower: "18,750 VP",
-        choice: "Abstain",
-      },
-    ],
-    meta: {
-      proposer: "0x4a1f...92b3",
-      startTime: "2025-01-10 09:00 UTC",
-      endTime: "2025-01-13 09:00 UTC",
-      snapshot: "Cronos block #15,204,118",
-      quorum: "250,000 VP",
-      result: "Quorum reached, majority Yes",
-    },
-  },
-  "sp-02": {
-    longDescription:
-      "Temporarily tighten the daily risk budget from 2.5% to 2.0% of pool NAV while the AI model is retrained. This is intended as a conservative measure while new regimes are validated.",
-    options: [
-      {
-        id: "yes",
-        label: "Yes",
-        description:
-          "Reduce the daily risk budget to 2.0% of NAV until further notice.",
-      },
-      {
-        id: "against",
-        label: "Against",
-        description:
-          "Keep the existing 2.5% daily risk budget during retraining.",
-      },
-      {
-        id: "abstain",
-        label: "Abstain",
-        description:
-          "Record presence without affecting the outcome of the proposal.",
-      },
-    ],
-    voters: [
-      {
-        address: "0x5f21...aa10",
-        votingPower: "98,400 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x3c77...d004",
-        votingPower: "54,200 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0xa102...44e9",
-        votingPower: "26,000 VP",
-        choice: "Against",
-      },
-      {
-        address: "0x71ff...2201",
-        votingPower: "12,300 VP",
-        choice: "Abstain",
-      },
-    ],
-    meta: {
-      proposer: "0x5f21...aa10",
-      startTime: "2025-01-14 12:00 UTC",
-      endTime: "2025-01-17 12:00 UTC",
-      snapshot: "Cronos block #15,309,882",
-      quorum: "200,000 VP",
-      result: "Quorum reached, majority Yes",
-    },
-  },
-  "sp-03": {
-    longDescription:
-      "Introduce time-based loyalty boosts for Absorber depositors that remain in the pool across multiple epochs. Boosts would increase target APY within the existing 8–12% band while keeping drawdown rails unchanged.",
-    options: [
-      {
-        id: "yes",
-        label: "Yes",
-        description:
-          "Introduce loyalty boosts with the proposed accrual schedule.",
-      },
-      {
-        id: "against",
-        label: "Against",
-        description:
-          "Do not introduce loyalty boosts; keep current Absorber yield policy.",
-      },
-      {
-        id: "abstain",
-        label: "Abstain",
-        description:
-          "Record presence without affecting the outcome of the proposal.",
-      },
-    ],
-    voters: [
-      {
-        address: "0x9a01...bb21",
-        votingPower: "64,800 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x22ee...c410",
-        votingPower: "41,250 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0xd010...008a",
-        votingPower: "19,000 VP",
-        choice: "Against",
-      },
-      {
-        address: "0x84de...11c2",
-        votingPower: "8,900 VP",
-        choice: "Abstain",
-      },
-    ],
-    meta: {
-      proposer: "0x9a01...bb21",
-      startTime: "2025-01-18 08:00 UTC",
-      endTime: "2025-01-21 08:00 UTC",
-      snapshot: "Cronos block #15,412,007",
-      quorum: "180,000 VP",
-      result: "Voting in progress",
-    },
-  },
-  "sp-00": {
-    longDescription:
-      "Define and launch the initial Supacron pool parameters, including drawdown limits, daily risk budgets, fee splits, and guardrails for AI trading. This is the genesis configuration for the protocol.",
-    options: [
-      {
-        id: "yes",
-        label: "Yes",
-        description:
-          "Approve the genesis configuration and launch the Supacron pool.",
-      },
-      {
-        id: "against",
-        label: "Against",
-        description:
-          "Reject the genesis configuration; keep the protocol paused.",
-      },
-    ],
-    voters: [
-      {
-        address: "0x11aa...ee01",
-        votingPower: "140,000 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x52c3...78ff",
-        votingPower: "96,000 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x88de...0042",
-        votingPower: "14,000 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x39f0...c3aa",
-        votingPower: "6,000 VP",
-        choice: "Against",
-      },
-    ],
-    meta: {
-      proposer: "0x11aa...ee01",
-      startTime: "2024-12-01 10:00 UTC",
-      endTime: "2024-12-04 10:00 UTC",
-      snapshot: "Cronos block #14,980,201",
-      quorum: "150,000 VP",
-      result: "Passed",
-    },
-  },
-  "sp-0x": {
-    longDescription:
-      "Enable the governance MVP that hands control of core risk parameters and trading lanes to a multisig council. This proposal activates the governance contracts and associated permissions.",
-    options: [
-      {
-        id: "yes",
-        label: "Yes",
-        description:
-          "Enable the governance MVP and delegate control to the council.",
-      },
-      {
-        id: "against",
-        label: "Against",
-        description:
-          "Keep governance disabled; maintain deployer-controlled configuration.",
-      },
-      {
-        id: "abstain",
-        label: "Abstain",
-        description:
-          "Record presence without affecting the outcome of the proposal.",
-      },
-    ],
-    voters: [
-      {
-        address: "0x7abc...ff10",
-        votingPower: "82,000 VP",
-        choice: "Yes",
-      },
-      {
-        address: "0x44de...c001",
-        votingPower: "61,500 VP",
-        choice: "Against",
-      },
-      {
-        address: "0x9300...7003",
-        votingPower: "48,200 VP",
-        choice: "Against",
-      },
-      {
-        address: "0x120f...99a0",
-        votingPower: "23,700 VP",
-        choice: "Yes",
-      },
-    ],
-    meta: {
-      proposer: "0x7abc...ff10",
-      startTime: "2024-12-10 15:00 UTC",
-      endTime: "2024-12-13 15:00 UTC",
-      snapshot: "Cronos block #15,040,552",
-      quorum: "220,000 VP",
-      result: "Failed to reach majority",
-    },
-  },
-}
-
-function getProposalAndDetail(idParam: string | undefined | null): {
-  proposal: Proposal | null
-  detail: ProposalDetail | null
-} {
-  if (!idParam) {
-    return { proposal: null, detail: null }
-  }
-  const slug = idParam.toString().toLowerCase()
-  const proposal =
-    PROPOSALS.find((p) => p.id.toLowerCase() === slug) ?? null
-  const detail = PROPOSAL_DETAILS[slug] ?? null
-  return { proposal, detail }
+type ProposalVote = {
+  id: string
+  voter_address: string
+  voting_power: number
+  choice: Choice
+  created_at: string
 }
 
 export default function ProposalDetailPage() {
   const params = useParams<{ id?: string | string[] }>()
   const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id
-  const { proposal, detail } = getProposalAndDetail(rawId)
 
-  if (!proposal || !detail) {
+  const [proposal, setProposal] = useState<DbProposal | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  const [account, setAccount] = useState<string | null>(null)
+  const [votingPower, setVotingPower] = useState<string | null>(null)
+  const [isLoadingVotingPower, setIsLoadingVotingPower] = useState(false)
+
+  const [selectedChoice, setSelectedChoice] = useState<Choice | null>(null)
+  const [isSubmittingVote, setIsSubmittingVote] = useState(false)
+  const [voteError, setVoteError] = useState<string | null>(null)
+  const [voteSuccess, setVoteSuccess] = useState<string | null>(null)
+  const [votes, setVotes] = useState<ProposalVote[]>([])
+  const [isLoadingVotes, setIsLoadingVotes] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function initAccount() {
+      const existing = await getConnectedAccount()
+      if (cancelled) {
+        return
+      }
+      if (existing) {
+        setAccount(existing)
+      }
+    }
+
+    initAccount()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!rawId) {
+      setIsLoading(false)
+      setLoadError("Proposal not found.")
+      return
+    }
+
+    const slug = rawId.toString()
+
+    let cancelled = false
+
+    async function loadProposal() {
+      setIsLoading(true)
+      setLoadError(null)
+      try {
+        const { data, error } = await supabase
+          .from("proposals")
+          .select("*")
+          .ilike("short_id", slug)
+          .maybeSingle()
+
+        if (cancelled) {
+          return
+        }
+
+        if (error) {
+          setLoadError("Failed to load proposal.")
+          return
+        }
+
+        if (!data) {
+          setLoadError("Proposal not found.")
+          return
+        }
+
+        setProposal(data as DbProposal)
+      } finally {
+        if (cancelled) {
+          return
+        }
+        setIsLoading(false)
+      }
+    }
+
+    loadProposal()
+
+    return () => {
+      cancelled = true
+    }
+  }, [rawId])
+
+  useEffect(() => {
+    if (!proposal) {
+      setVotes([])
+      return
+    }
+
+    let cancelled = false
+
+    async function loadVotes(currentProposalId: string) {
+      setIsLoadingVotes(true)
+      try {
+        const { data, error } = await supabase
+          .from("proposal_votes")
+          .select("*")
+          .eq("proposal_id", currentProposalId)
+          .order("created_at", { ascending: true })
+
+        if (cancelled) {
+          return
+        }
+
+        if (error) {
+          return
+        }
+
+        setVotes((data ?? []) as ProposalVote[])
+      } finally {
+        if (cancelled) {
+          return
+        }
+        setIsLoadingVotes(false)
+      }
+    }
+
+    loadVotes(proposal.id)
+
+    return () => {
+      cancelled = true
+    }
+  }, [proposal])
+
+  useEffect(() => {
+    if (!account) {
+      setVotingPower(null)
+      return
+    }
+
+    let cancelled = false
+
+    async function loadVotingPower() {
+      setIsLoadingVotingPower(true)
+      try {
+        const contract = new Contract(
+          SUPA_CONTRACT_ADDRESS,
+          SUPA_ABI,
+          RPC_PROVIDER
+        )
+        const [balance, decimals] = await Promise.all([
+          contract.balanceOf(account),
+          contract.decimals(),
+        ])
+        if (cancelled) {
+          return
+        }
+        const formatted = formatUnits(balance, decimals)
+        setVotingPower(formatted)
+      } catch {
+        if (cancelled) {
+          return
+        }
+        setVotingPower(null)
+      } finally {
+        if (cancelled) {
+          return
+        }
+        setIsLoadingVotingPower(false)
+      }
+    }
+
+    loadVotingPower()
+
+    return () => {
+      cancelled = true
+    }
+  }, [account])
+
+  async function handleConnectWallet() {
+    setVoteError(null)
+    setVoteSuccess(null)
+    if (!account) {
+      const addr = await connectWalletCronosEvm()
+      if (addr) {
+        setAccount(addr)
+      }
+    }
+  }
+
+  async function handleVote() {
+    if (!proposal) {
+      return
+    }
+    if (!selectedChoice) {
+      setVoteError("Please select a voting option.")
+      setVoteSuccess(null)
+      return
+    }
+    if (typeof window === "undefined") {
+      return
+    }
+
+    setVoteError(null)
+    setVoteSuccess(null)
+    setIsSubmittingVote(true)
+
+    try {
+      let activeAccount = account
+      if (!activeAccount) {
+        const addr = await connectWalletCronosEvm()
+        if (!addr) {
+          setIsSubmittingVote(false)
+          return
+        }
+        activeAccount = addr
+        setAccount(addr)
+      }
+
+      const contract = new Contract(
+        SUPA_CONTRACT_ADDRESS,
+        SUPA_ABI,
+        RPC_PROVIDER
+      )
+      const [balance, decimals] = await Promise.all([
+        contract.balanceOf(activeAccount),
+        contract.decimals(),
+      ])
+      const numeric = Number(formatUnits(balance, decimals))
+      const weight = Number.isFinite(numeric) ? Math.floor(numeric) : 0
+
+      if (weight <= 0) {
+        setVoteError("You have no SUPA voting power.")
+        return
+      }
+
+      const normalizedAddress = activeAccount.toLowerCase()
+
+      const { data: existingVote } = await supabase
+        .from("proposal_votes")
+        .select("id")
+        .eq("proposal_id", proposal.id)
+        .eq("voter_address", normalizedAddress)
+        .maybeSingle()
+
+      if (existingVote) {
+        setVoteError("You already voted on this proposal.")
+        return
+      }
+
+      const yes = Number(proposal.yes_votes ?? 0)
+      const no = Number(proposal.no_votes ?? 0)
+      const abstain = Number(proposal.abstain_votes ?? 0)
+
+      const updated =
+        selectedChoice === "yes"
+          ? {
+              yes_votes: yes + weight,
+              no_votes: no,
+              abstain_votes: abstain,
+            }
+          : selectedChoice === "no"
+          ? {
+              yes_votes: yes,
+              no_votes: no + weight,
+              abstain_votes: abstain,
+            }
+          : {
+              yes_votes: yes,
+              no_votes: no,
+              abstain_votes: abstain + weight,
+            }
+
+      const { error } = await supabase
+        .from("proposals")
+        .update(updated)
+        .eq("id", proposal.id)
+
+      if (error) {
+        setVoteError("Failed to record vote.")
+        return
+      }
+
+      const { error: voteErrorDb } = await supabase.from("proposal_votes").insert({
+        proposal_id: proposal.id,
+        voter_address: normalizedAddress,
+        voting_power: weight,
+        choice: selectedChoice,
+      })
+
+      if (voteErrorDb) {
+        setVoteError("Failed to record vote.")
+        return
+      }
+
+      const { data: updatedVotes, error: loadVotesError } = await supabase
+        .from("proposal_votes")
+        .select("*")
+        .eq("proposal_id", proposal.id)
+        .order("created_at", { ascending: true })
+
+      if (!loadVotesError) {
+        setVotes((updatedVotes ?? []) as ProposalVote[])
+      }
+
+      setProposal({
+        ...proposal,
+        ...updated,
+      })
+      setVoteSuccess("Vote recorded.")
+    } catch {
+      setVoteError("Failed to record vote.")
+    } finally {
+      setIsSubmittingVote(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
+        <SiteHeader />
+        <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl flex-col px-4 pb-16 pt-16 sm:px-6 lg:px-8">
+          <p className="text-sm text-slate-600">Loading proposal...</p>
+        </main>
+        <FooterSection />
+      </div>
+    )
+  }
+
+  if (!proposal || loadError) {
     return (
       <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
         <SiteHeader />
@@ -340,13 +375,28 @@ export default function ProposalDetailPage() {
             Proposal not found
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            The proposal you are looking for does not exist in this demo.
+            {loadError ?? "The proposal you are looking for does not exist."}
           </p>
         </main>
         <FooterSection />
       </div>
     )
   }
+
+  const endTimeLabel = formatProposalDate(proposal.end_time)
+  const createdAtLabel = formatProposalDate(proposal.created_at)
+
+  const yesVotes = Number(proposal.yes_votes ?? 0)
+  const noVotes = Number(proposal.no_votes ?? 0)
+  const abstainVotes = Number(proposal.abstain_votes ?? 0)
+  const totalVotes = yesVotes + noVotes + abstainVotes
+
+  const yesPercent =
+    totalVotes === 0 ? 0 : Math.round((yesVotes / totalVotes) * 100)
+  const noPercent =
+    totalVotes === 0 ? 0 : Math.round((noVotes / totalVotes) * 100)
+  const abstainPercent =
+    totalVotes === 0 ? 0 : Math.round((abstainVotes / totalVotes) * 100)
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
@@ -368,30 +418,41 @@ export default function ProposalDetailPage() {
         <section className="flex flex-col gap-4 border-b border-slate-200/80 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">
-              {proposal.id}
+              {proposal.short_id}
             </p>
             <h1 className="mt-2 text-balance text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-              {proposal.title.replace(`${proposal.id}: `, "")}
+              {proposal.title}
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-slate-600">
-              {detail.longDescription}
+              {proposal.description}
             </p>
+            {proposal.docs_url ? (
+              <p className="mt-3 text-xs">
+                <a
+                  href={proposal.docs_url}
+                  className="font-medium text-slate-900 underline underline-offset-4"
+                >
+                  View specification
+                </a>
+              </p>
+            ) : null}
           </div>
           <div className="grid gap-2 text-xs text-slate-600 sm:w-64">
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Proposer
+                Status
               </p>
-              <p className="mt-1 font-mono text-xs text-slate-900">
-                {detail.meta.proposer}
+              <p className="mt-1 text-xs font-semibold text-slate-900">
+                {proposal.status === "upcoming" ? "Ongoing" : "Ended"} ·{" "}
+                {proposal.outcome}
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Result
+                Quorum
               </p>
               <p className="mt-1 text-xs font-semibold text-slate-900">
-                {detail.meta.result}
+                {proposal.quorum ? proposal.quorum.toString() : "Not set"}
               </p>
             </div>
           </div>
@@ -401,114 +462,205 @@ export default function ProposalDetailPage() {
           <Card className="border-slate-200 bg-white/95">
             <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-sm font-semibold text-slate-900">
-                Voting options
+                Vote on this proposal
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 pt-4 text-xs text-slate-600">
-              {detail.options.map((option) => (
-                <div
-                  key={option.id}
-                  className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
-                >
-                  <div>
-                    <p className="text-xs font-semibold text-slate-900">
-                      {option.label}
-                    </p>
-                    <p className="mt-1 text-[11px] text-slate-600">
-                      {option.description}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
-                    aria-label={`Cast ${option.label} vote`}
-                  >
-                    Vote
-                  </Button>
+            <CardContent className="space-y-4 pt-4 text-xs text-slate-600">
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                    Your wallet
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] text-slate-900">
+                    {account
+                      ? `${account.slice(0, 6)}...${account.slice(-4)}`
+                      : "Not connected"}
+                  </p>
                 </div>
-              ))}
-              <p className="mt-1 text-[11px] text-slate-500">
-                Voting actions are illustrative only for this Cronos hackathon
-                demo.
-              </p>
+                {!account ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 rounded-full border-slate-200 bg-white px-3 text-[11px] font-medium hover:bg-slate-50"
+                    onClick={handleConnectWallet}
+                  >
+                    Connect wallet
+                  </Button>
+                ) : null}
+              </div>
+              <div className="rounded-lg bg-slate-50 px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                  Your voting power
+                </p>
+                <p className="mt-1 text-xs font-semibold text-slate-900">
+                  {account
+                    ? isLoadingVotingPower
+                      ? "Loading..."
+                      : votingPower
+                      ? `${votingPower} SUPA`
+                      : "0 SUPA"
+                    : "Connect wallet to see voting power"}
+                </p>
+              </div>
+              <div className="space-y-2">
+                {([
+                  { id: "yes", label: "Yes", description: "Support this change" },
+                  {
+                    id: "no",
+                    label: "Against",
+                    description: "Do not support this change",
+                  },
+                  {
+                    id: "abstain",
+                    label: "Abstain",
+                    description: "Record presence without affecting the outcome",
+                  },
+                ] as { id: Choice; label: string; description: string }[]).map(
+                  (option) => {
+                    const isActive = selectedChoice === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setSelectedChoice(option.id)}
+                        className={`flex w-full items-start justify-between gap-3 rounded-lg border px-3 py-2 text-left ${
+                          isActive
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div>
+                          <p
+                            className={`text-xs font-semibold ${
+                              isActive ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {option.label}
+                          </p>
+                          <p
+                            className={`mt-1 text-[11px] ${
+                              isActive ? "text-slate-100" : "text-slate-600"
+                            }`}
+                          >
+                            {option.description}
+                          </p>
+                        </div>
+                        <span
+                          className={`mt-1 h-3 w-3 rounded-full border ${
+                            isActive
+                              ? "border-white bg-white"
+                              : "border-slate-300"
+                          }`}
+                        />
+                      </button>
+                    )
+                  }
+                )}
+              </div>
+              {voteError ? (
+                <p className="text-[11px] text-rose-600">{voteError}</p>
+              ) : null}
+              {voteSuccess ? (
+                <p className="text-[11px] text-emerald-600">{voteSuccess}</p>
+              ) : null}
+              <Button
+                size="sm"
+                className="mt-1 w-full rounded-full bg-slate-900 text-[11px] font-medium text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isSubmittingVote || !selectedChoice}
+                onClick={handleVote}
+              >
+                {isSubmittingVote ? "Submitting vote..." : "Submit vote"}
+              </Button>
             </CardContent>
           </Card>
 
           <Card className="border-slate-200 bg-white/95">
             <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-sm font-semibold text-slate-900">
-                Proposal metadata
+                Proposal metadata and votes
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 pt-4 text-xs text-slate-600 sm:grid-cols-2">
               <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Start time
+                  Created at
                 </p>
                 <p className="text-xs font-semibold text-slate-900">
-                  {detail.meta.startTime}
+                  {createdAtLabel ?? "—"}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  End time
+                  Ends at
                 </p>
                 <p className="text-xs font-semibold text-slate-900">
-                  {detail.meta.endTime}
+                  {endTimeLabel ?? "—"}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Last snapshot
+                  Total votes
                 </p>
                 <p className="text-xs font-semibold text-slate-900">
-                  {detail.meta.snapshot}
+                  {totalVotes}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Quorum
+                  Breakdown
                 </p>
                 <p className="text-xs font-semibold text-slate-900">
-                  {detail.meta.quorum}
+                  Yes {yesVotes} ({yesPercent}%)
+                </p>
+                <p className="text-xs font-semibold text-slate-900">
+                  Against {noVotes} ({noPercent}%)
+                </p>
+                <p className="text-xs font-semibold text-slate-900">
+                  Abstain {abstainVotes} ({abstainPercent}%)
                 </p>
               </div>
             </CardContent>
           </Card>
         </section>
-
         <section className="mt-8">
           <Card className="border-slate-200 bg-white/95">
             <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-sm font-semibold text-slate-900">
-                Voters and voting power
+                Voters
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 text-xs text-slate-600">
-              <div className="mb-3 grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-[11px] font-medium text-slate-500">
-                <span>Voter</span>
-                <span className="text-right">Voting power</span>
-                <span className="text-right">Choice</span>
-              </div>
-              <div className="space-y-2">
-                {detail.voters.map((voter) => (
-                  <div
-                    key={voter.address}
-                    className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 rounded-lg bg-slate-50 px-3 py-2"
-                  >
-                    <p className="font-mono text-[11px] text-slate-900">
-                      {voter.address}
-                    </p>
-                    <p className="text-right text-[11px] font-medium text-slate-900">
-                      {voter.votingPower}
-                    </p>
-                    <p className="text-right text-[11px] font-medium text-slate-700">
-                      {voter.choice}
-                    </p>
+              {isLoadingVotes ? (
+                <p className="text-[11px] text-slate-500">Loading voters...</p>
+              ) : votes.length === 0 ? (
+                <p className="text-[11px] text-slate-500">
+                  No votes have been recorded for this proposal yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-[11px] font-medium text-slate-500">
+                    <span>Address</span>
+                    <span className="text-right">Voting power</span>
+                    <span className="text-right">Choice</span>
                   </div>
-                ))}
-              </div>
+                  {votes.map((vote) => (
+                    <div
+                      key={vote.id}
+                      className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 rounded-lg bg-slate-50 px-3 py-2"
+                    >
+                      <p className="font-mono text-[11px] text-slate-900">
+                        {vote.voter_address}
+                      </p>
+                      <p className="text-right text-[11px] font-medium text-slate-900">
+                        {vote.voting_power.toString()}
+                      </p>
+                      <p className="text-right text-[11px] font-medium text-slate-700">
+                        {vote.choice}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </section>

@@ -109,7 +109,7 @@ export const PROPOSALS: Proposal[] = [
   },
 ]
 
-type DbProposal = {
+export type DbProposal = {
   id: string
   short_id: string
   title: string
@@ -125,7 +125,7 @@ type DbProposal = {
   abstain_votes: number | null
 }
 
-function formatProposalDate(value: string | null) {
+export function formatProposalDate(value: string | null) {
   if (!value) {
     return null
   }
@@ -911,7 +911,7 @@ function GovernanceGrid() {
                     ) : null}
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
-                    <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                    <div className="flex flex-1 flex-col gap-1 text-[11px] text-slate-500">
                       {(() => {
                         const yes = Number(proposal.yes_votes ?? 0)
                         const no = Number(proposal.no_votes ?? 0)
@@ -922,14 +922,28 @@ function GovernanceGrid() {
                         const yesPercent = Math.round((yes / total) * 100)
                         const noPercent = 100 - yesPercent
                         return (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-emerald-700">
-                              Yes {yesPercent}%
-                            </span>
-                            <span className="font-medium text-rose-700">
-                              Against {noPercent}%
-                            </span>
-                          </div>
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-emerald-700">
+                                Yes {yesPercent}%
+                              </span>
+                              <span className="font-medium text-rose-700">
+                                Against {noPercent}%
+                              </span>
+                            </div>
+                            <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+                              <div className="flex h-2 w-full">
+                                <div
+                                  className="h-2 bg-emerald-500"
+                                  style={{ width: `${yesPercent}%` }}
+                                />
+                                <div
+                                  className="h-2 bg-rose-400"
+                                  style={{ width: `${noPercent}%` }}
+                                />
+                              </div>
+                            </div>
+                          </>
                         )
                       })()}
                     </div>
@@ -941,7 +955,9 @@ function GovernanceGrid() {
                       aria-label={`Open details for ${proposal.short_id}`}
                     >
                       <Link
-                        href={`/governance/proposals/${proposal.short_id.toLowerCase()}`}
+                        href={`/governance/proposals/${encodeURIComponent(
+                          proposal.short_id
+                        )}`}
                       >
                         View proposal
                         <ArrowUpRight
