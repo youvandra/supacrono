@@ -517,10 +517,10 @@ function GovernanceGrid() {
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-[11px]">
                         <p className="font-medium text-emerald-700">
-                          Yes {yesPercent}% ({proposal.yesVotes})
+                          Yes {yesPercent}%
                         </p>
                         <p className="font-medium text-rose-700">
-                          Against {noPercent}% ({proposal.noVotes})
+                          Against {noPercent}%
                         </p>
                       </div>
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
