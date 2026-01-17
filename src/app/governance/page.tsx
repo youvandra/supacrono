@@ -873,6 +873,22 @@ function GovernanceGrid() {
 
               const endTimeLabel = formatProposalDate(proposal.end_time)
               const createdAtLabel = formatProposalDate(proposal.created_at)
+              const yesPower = Number(proposal.yes_votes ?? 0)
+              const noPower = Number(proposal.no_votes ?? 0)
+              const abstainPower = Number(proposal.abstain_votes ?? 0)
+              const totalPower = yesPower + noPower + abstainPower
+              const quorumValue = Number(proposal.quorum ?? 0)
+              const hasQuorum =
+                Number.isFinite(quorumValue) &&
+                quorumValue > 0 &&
+                totalPower >= quorumValue
+              const quorumPercent =
+                Number.isFinite(quorumValue) && quorumValue > 0
+                  ? Math.min(
+                      100,
+                      Math.round((totalPower / quorumValue) * 100)
+                    )
+                  : 0
 
               return (
                 <div
@@ -906,15 +922,18 @@ function GovernanceGrid() {
                     </p>
                     {proposal.quorum ? (
                       <p className="sm:text-right">
-                        Quorum: {proposal.quorum.toString()}
+                        {hasQuorum ? "Quorum reached" : "Quorum progress"} ·{" "}
+                        {quorumPercent}% (
+                        {totalPower.toLocaleString("en-US")} /{" "}
+                        {proposal.quorum.toString()})
                       </p>
                     ) : null}
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
                     <div className="flex flex-1 flex-col gap-1 text-[11px] text-slate-500">
                       {(() => {
-                        const yes = Number(proposal.yes_votes ?? 0)
-                        const no = Number(proposal.no_votes ?? 0)
+                        const yes = yesPower
+                        const no = noPower
                         const total = yes + no
                         if (total === 0) {
                           return <span>No votes yet</span>

@@ -391,6 +391,14 @@ export default function ProposalDetailPage() {
   const abstainVotes = Number(proposal.abstain_votes ?? 0)
   const totalVotes = yesVotes + noVotes + abstainVotes
 
+  const quorumValue = Number(proposal.quorum ?? 0)
+  const hasQuorum =
+    Number.isFinite(quorumValue) && quorumValue > 0 && totalVotes >= quorumValue
+  const quorumPercent =
+    Number.isFinite(quorumValue) && quorumValue > 0
+      ? Math.min(100, Math.round((totalVotes / quorumValue) * 100))
+      : 0
+
   const yesPercent =
     totalVotes === 0 ? 0 : Math.round((yesVotes / totalVotes) * 100)
   const noPercent =
@@ -454,6 +462,17 @@ export default function ProposalDetailPage() {
               <p className="mt-1 text-xs font-semibold text-slate-900">
                 {proposal.quorum ? proposal.quorum.toString() : "Not set"}
               </p>
+              {proposal.quorum ? (
+                <p
+                  className={`mt-1 text-[11px] ${
+                    hasQuorum ? "text-emerald-700" : "text-slate-500"
+                  }`}
+                >
+                  {hasQuorum ? "Quorum reached" : "Quorum progress"} ·{" "}
+                  {quorumPercent}% ({totalVotes.toLocaleString("en-US")} /{" "}
+                  {proposal.quorum.toString()})
+                </p>
+              ) : null}
             </div>
           </div>
         </section>
