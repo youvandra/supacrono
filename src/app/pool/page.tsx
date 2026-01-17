@@ -1104,7 +1104,7 @@ function PoolAdvancedChartSection() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm font-semibold text-slate-900">
-                {position?.instrument ?? "HBARUSD-PERP"}
+                {position?.instrument ?? "CROUSD-PERP"}
               </CardTitle>
               {position?.side ? (
                 <span
@@ -1145,7 +1145,7 @@ function PoolAdvancedChartSection() {
                 </span>
               ) : (
                 <span className="text-[11px] text-slate-500">
-                  No active HBARUSD-PERP position
+                  No active CROUSD-PERP position
                 </span>
               )}
             </div>
@@ -1173,7 +1173,7 @@ function PoolTradingViewAdvancedChart() {
     script.async = true
     script.innerHTML = JSON.stringify({
       autosize: true,
-      symbol: "CRYPTOCOM:HBARUSD",
+      symbol: "CRYPTOCOM:CROUSD",
       interval: "60",
       timezone: "Etc/UTC",
       theme: "light",
