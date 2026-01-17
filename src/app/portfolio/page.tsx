@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight, PieChart, Wallet } from "lucide-react"
+import { Contract, JsonRpcProvider, formatUnits } from "ethers"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,12 +15,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  SUPA_CP_ABI,
+  SUPA_CP_CONTRACT_ADDRESS,
+} from "@/lib/smart-contract/supa"
 
 type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
 }
 
 const CRONOS_CHAIN_ID_HEX = "0x152"
+const RPC_PROVIDER = new JsonRpcProvider("https://evm-t3.cronos.org")
 
 async function connectWalletCronosEvm(): Promise<string | null> {
   if (typeof window === "undefined") {
@@ -250,7 +256,7 @@ export default function PortfolioPage() {
       />
       {isConnected ? (
         <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-8">
-          <PortfolioOverviewSection />
+          <PortfolioOverviewSection account={account} />
           <RoleBreakdownSection />
           <PerformanceAndRiskSection />
           <ActivitySection />
@@ -291,7 +297,72 @@ export default function PortfolioPage() {
   )
 }
 
-function PortfolioOverviewSection() {
+function PortfolioOverviewSection({ account }: { account: string | null }) {
+  const [isLoadingPool, setIsLoadingPool] = useState(false)
+  const [userAvailable, setUserAvailable] = useState<number | null>(null)
+  const [userInPosition, setUserInPosition] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadUserPool() {
+      if (!account) {
+        setUserAvailable(null)
+        setUserInPosition(null)
+        return
+      }
+
+      setIsLoadingPool(true)
+
+      try {
+        const contract = new Contract(
+          SUPA_CP_CONTRACT_ADDRESS,
+          SUPA_CP_ABI,
+          RPC_PROVIDER
+        )
+        const user = await contract.users(account)
+
+        if (cancelled) {
+          return
+        }
+
+        const available = Number(formatUnits(user.available, 18))
+        const inPosition = Number(formatUnits(user.inPosition, 18))
+
+        setUserAvailable(available)
+        setUserInPosition(inPosition)
+      } catch {
+        if (!cancelled) {
+          setUserAvailable(null)
+          setUserInPosition(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPool(false)
+        }
+      }
+    }
+
+    loadUserPool()
+
+    return () => {
+      cancelled = true
+    }
+  }, [account])
+
+  const totalCommitted =
+    userAvailable !== null && userInPosition !== null
+      ? userAvailable + userInPosition
+      : null
+
+  const totalCommittedDisplay = isLoadingPool
+    ? "Loading..."
+    : totalCommitted !== null
+      ? `${totalCommitted.toLocaleString("en-US", {
+          maximumFractionDigits: 4,
+        })} tCRO`
+      : "0.00 tCRO"
+
   return (
     <motion.section
       className="flex flex-col gap-6 border-b border-slate-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between"
@@ -330,7 +401,7 @@ function PortfolioOverviewSection() {
             Total portfolio value
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            $124,500
+            {totalCommittedDisplay}
           </p>
           <p className="text-[11px] text-emerald-600">+$8,420 (+7.3%)</p>
         </div>
