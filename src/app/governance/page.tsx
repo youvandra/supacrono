@@ -123,6 +123,7 @@ export type DbProposal = {
   yes_votes: number | null
   no_votes: number | null
   abstain_votes: number | null
+  last_block: number | null
 }
 
 export function formatProposalDate(value: string | null) {

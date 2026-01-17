@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 
 import { supabase } from "@/lib/supabaseClient"
+import { RPC_PROVIDER } from "../../page"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -56,6 +57,8 @@ export default function NewProposalPage() {
     setIsSubmitting(true)
 
     try {
+      const latestBlockNumber = await RPC_PROVIDER.getBlockNumber()
+
       const { error: insertError } = await supabase.from("proposals").insert([
         {
           short_id: shortId.trim(),
@@ -64,6 +67,7 @@ export default function NewProposalPage() {
           docs_url: docsUrl.trim() || null,
           end_time: endTimeValue.toISOString(),
           quorum: parsedQuorum,
+          last_block: latestBlockNumber,
         },
       ])
 

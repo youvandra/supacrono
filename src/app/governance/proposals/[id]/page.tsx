@@ -457,22 +457,16 @@ export default function ProposalDetailPage() {
             </div>
             <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Quorum
+                Snapshot block
               </p>
-              <p className="mt-1 text-xs font-semibold text-slate-900">
-                {proposal.quorum ? proposal.quorum.toString() : "Not set"}
+              <p className="mt-1 font-mono text-[11px] text-slate-900">
+                {proposal.last_block !== null
+                  ? `#${proposal.last_block.toLocaleString("en-US")}`
+                  : "Not recorded"}
               </p>
-              {proposal.quorum ? (
-                <p
-                  className={`mt-1 text-[11px] ${
-                    hasQuorum ? "text-emerald-700" : "text-slate-500"
-                  }`}
-                >
-                  {hasQuorum ? "Quorum reached" : "Quorum progress"} ·{" "}
-                  {quorumPercent}% ({totalVotes.toLocaleString("en-US")} /{" "}
-                  {proposal.quorum.toString()})
-                </p>
-              ) : null}
+              <p className="mt-1 text-[11px] text-slate-500">
+                Voting power is measured at this Cronos block.
+              </p>
             </div>
           </div>
         </section>
@@ -622,6 +616,13 @@ export default function ProposalDetailPage() {
                 </p>
                 <p className="text-xs font-semibold text-slate-900">
                   {totalVotes}
+                </p>
+                <p className="mt-2 text-[11px] text-slate-500">
+                  {proposal.quorum
+                    ? `${hasQuorum ? "Quorum reached" : "Quorum progress"} · ${quorumPercent}% (${totalVotes.toLocaleString(
+                        "en-US"
+                      )} / ${proposal.quorum.toString()})`
+                    : "Quorum not set for this proposal."}
                 </p>
               </div>
               <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
