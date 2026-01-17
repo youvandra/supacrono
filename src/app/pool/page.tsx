@@ -465,6 +465,9 @@ function PoolOverviewSection() {
         })
       : "—"
 
+  const poolStatus =
+    positionNotional !== null && positionNotional > 0 ? "Active" : "Inactive"
+
   const poolPnlDisplay =
     positionPnl !== null
       ? (() => {
@@ -621,7 +624,7 @@ function PoolOverviewSection() {
                   Pool status
                 </span>
                 <span className="text-xs font-semibold text-slate-900">
-                  Active
+                  {poolStatus}
                 </span>
               </div>
             </div>
