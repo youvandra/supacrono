@@ -245,6 +245,24 @@ export default function NewProposalPage() {
         </section>
       </main>
       <FooterSection />
+      {successMessage ? (
+        <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex max-w-xs items-start gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-[11px] shadow-lg">
+          <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-semibold text-emerald-700">
+            ✓
+          </div>
+          <div className="flex-1 space-y-1">
+            <p className="font-semibold text-emerald-700">Proposal created</p>
+            <p className="text-slate-600">{successMessage}</p>
+          </div>
+          <button
+            type="button"
+            className="pointer-events-auto ml-3 text-[11px] text-slate-400 hover:text-slate-600"
+            onClick={() => setSuccessMessage(null)}
+          >
+            Close
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

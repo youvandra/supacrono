@@ -402,6 +402,7 @@ function GovernanceHero() {
   const [isMintOpen, setIsMintOpen] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
   const [mintError, setMintError] = useState<string | null>(null)
+  const [mintToastMessage, setMintToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -557,6 +558,7 @@ function GovernanceHero() {
       setYourPower(formattedBalance)
       setTotalPower(formattedSupply)
       setIsMintOpen(false)
+      setMintToastMessage("You successfully minted SUPA on Cronos testnet.")
     } catch (error) {
       const rawMessage =
         error instanceof Error ? error.message : "Failed to mint SUPA."
@@ -571,13 +573,14 @@ function GovernanceHero() {
   }
 
   return (
-    <motion.section
-      className="flex flex-col gap-6 border-b border-slate-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between"
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-    >
-      <div className="max-w-xl">
+    <>
+      <motion.section
+        className="flex flex-col gap-6 border-b border-slate-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        <div className="max-w-xl">
         <Badge className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800">
           Protocol governance
         </Badge>
@@ -590,8 +593,8 @@ function GovernanceHero() {
           Takers and Absorbers. This page summarizes the current parameters and
           ongoing changes.
         </p>
-      </div>
-      <div className="flex flex-col gap-3 sm:items-end">
+        </div>
+        <div className="flex flex-col gap-3 sm:items-end">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">
           Voting Power
         </p>
@@ -640,8 +643,8 @@ function GovernanceHero() {
             </div>
           </div>
         </div>
-      </div>
-      {isMintOpen ? (
+        </div>
+        {isMintOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-lg">
             <div className="flex items-start justify-between gap-4">
@@ -715,8 +718,27 @@ function GovernanceHero() {
             </Button>
           </div>
         </div>
+        ) : null}
+      </motion.section>
+      {mintToastMessage ? (
+        <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex max-w-xs items-start gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-[11px] shadow-lg">
+          <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-semibold text-emerald-700">
+            ✓
+          </div>
+          <div className="flex-1 space-y-1">
+            <p className="font-semibold text-emerald-700">Mint successful</p>
+            <p className="text-slate-600">{mintToastMessage}</p>
+          </div>
+          <button
+            type="button"
+            className="pointer-events-auto ml-3 text-[11px] text-slate-400 hover:text-slate-600"
+            onClick={() => setMintToastMessage(null)}
+          >
+            Close
+          </button>
+        </div>
       ) : null}
-    </motion.section>
+    </>
   )
 }
 
