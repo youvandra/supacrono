@@ -502,7 +502,7 @@ function PoolOverviewSection() {
             in the pool as a Taker or Absorber.
           </p>
           <div className="mt-1 grid gap-2 sm:grid-cols-3">
-            <MetricPill label="Role" value="Not connected" subtle />
+            <MetricPill label="Pending Deposit" value="0.00 USDT" subtle />
             <MetricPill label="Deposited" value="0.00 USDT" subtle />
             <MetricPill label="Accrued yield" value="0.00 USDT" subtle />
           </div>
