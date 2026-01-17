@@ -459,7 +459,7 @@ export default function ProposalDetailPage() {
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 Snapshot block
               </p>
-              <p className="mt-1 font-mono text-[11px] text-slate-900">
+              <p className="mt-1 text-xs font-semibold text-slate-900">
                 {proposal.last_block !== null
                   ? `#${proposal.last_block.toLocaleString("en-US")}`
                   : "Not recorded"}
