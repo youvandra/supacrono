@@ -496,6 +496,83 @@ function PoolOverviewSection() {
 }
 
 function PoolAdvancedChartSection() {
+  const [position, setPosition] = useState<{
+    instrument: string
+    quantity: number | null
+    side: string | null
+    notional: number | null
+    pnl: number | null
+    type: string | null
+    isolationType: string | null
+    entryPrice: number | null
+  } | null>(null)
+  const [isLoadingPosition, setIsLoadingPosition] = useState(false)
+  const [positionError, setPositionError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadPosition() {
+      setIsLoadingPosition(true)
+      setPositionError(null)
+
+      try {
+        const response = await fetch("/api/crypto-positions")
+        if (!response.ok) {
+          if (!cancelled) {
+            setPosition(null)
+          }
+          return
+        }
+
+        const data = (await response.json()) as {
+          position?: {
+            instrument: string
+            quantity: number | null
+            side: string | null
+            notional: number | null
+            pnl: number | null
+            type: string | null
+            isolationType: string | null
+            entryPrice: number | null
+          } | null
+          error?: string
+        }
+
+        if (cancelled) {
+          return
+        }
+
+        if (data.error) {
+          setPosition(null)
+          setPositionError("Unable to load active position")
+          return
+        }
+
+        if (data.position) {
+          setPosition(data.position)
+        } else {
+          setPosition(null)
+        }
+      } catch {
+        if (!cancelled) {
+          setPosition(null)
+          setPositionError("Unable to load active position")
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPosition(false)
+        }
+      }
+    }
+
+    loadPosition()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <motion.section
       className="mt-8"
@@ -506,9 +583,89 @@ function PoolAdvancedChartSection() {
     >
       <Card className="border-slate-200 bg-white/95">
         <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">
-            CRO / USD advanced chart
-          </CardTitle>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold text-slate-900">
+                {position?.instrument ?? "HBARUSD-PERP"}
+              </CardTitle>
+              {position?.side ? (
+                <span
+                  className={
+                    position.side === "LONG"
+                      ? "rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700"
+                      : position.side === "SHORT"
+                        ? "rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-700"
+                        : "rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700"
+                  }
+                >
+                  {position.side}
+                </span>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 text-xs">
+              {isLoadingPosition ? (
+                <span className="text-[11px] text-slate-500">
+                  Loading position…
+                </span>
+              ) : position ? (
+                <>
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
+                    Size{" "}
+                    {position.quantity !== null
+                      ? position.quantity
+                      : "0"}
+                  </span>
+                  {position.entryPrice !== null ? (
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
+                      Entry {position.entryPrice.toFixed(6)}
+                    </span>
+                  ) : null}
+                  {position.notional !== null ? (
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
+                      Notional{" "}
+                      {position.notional.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  ) : null}
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
+                    PnL{" "}
+                    <span
+                      className={
+                        "font-semibold " +
+                        (position.pnl !== null && position.pnl !== 0
+                          ? position.pnl > 0
+                            ? "text-emerald-600"
+                            : "text-rose-600"
+                          : "text-slate-700")
+                      }
+                    >
+                      {position.pnl !== null
+                        ? `${position.pnl > 0 ? "+" : ""}${position.pnl.toFixed(4)}`
+                        : "0.0000"}
+                    </span>
+                  </span>
+                  {position.isolationType ? (
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600">
+                      {position.isolationType === "ISOLATED_MARGIN"
+                        ? "Isolated margin"
+                        : position.isolationType}
+                    </span>
+                  ) : null}
+                </>
+              ) : positionError ? (
+                <span className="text-xs text-rose-600">
+                  {positionError}
+                </span>
+              ) : (
+                <span className="text-[11px] text-slate-500">
+                  No active HBARUSD-PERP position
+                </span>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="pt-4">
           <PoolTradingViewAdvancedChart />
@@ -532,7 +689,7 @@ function PoolTradingViewAdvancedChart() {
     script.async = true
     script.innerHTML = JSON.stringify({
       autosize: true,
-      symbol: "CRYPTOCOM:CROUSD",
+      symbol: "CRYPTOCOM:HBARUSD",
       interval: "60",
       timezone: "Etc/UTC",
       theme: "light",
