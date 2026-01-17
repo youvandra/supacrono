@@ -473,6 +473,23 @@ function PoolOverviewSection() {
         })()
       : "—"
 
+  const poolPnlPercent =
+    positionPnl !== null && totalPoolNumeric !== null && totalPoolNumeric > 0
+      ? (positionPnl/(totalPoolNumeric - positionPnl)) * 100
+      : null
+
+  const poolPnlPercentDisplay =
+    poolPnlPercent !== null
+      ? `${poolPnlPercent > 0 ? "+" : ""}${poolPnlPercent.toFixed(1)}% today`
+      : "—"
+
+  const poolPnlPercentClass =
+    poolPnlPercent !== null && poolPnlPercent !== 0
+      ? poolPnlPercent > 0
+        ? "text-emerald-600"
+        : "text-rose-600"
+      : "text-slate-500"
+
   return (
     <motion.section
       className="flex flex-col gap-6 border-b border-slate-200/80 pb-8"
@@ -540,7 +557,9 @@ function PoolOverviewSection() {
                   ? "Loading..."
                   : totalPoolValue ?? "$0.00"}
               </p>
-              <p className="text-[11px] text-emerald-600">+4.3% today</p>
+              <p className={`text-[11px] ${poolPnlPercentClass}`}>
+                {poolPnlPercentDisplay}
+              </p>
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
