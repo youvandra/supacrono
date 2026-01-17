@@ -313,7 +313,10 @@ function FooterSection() {
 
 function PoolOverviewSection() {
   const [totalPoolValue, setTotalPoolValue] = useState<string | null>(null)
+  const [totalPoolNumeric, setTotalPoolNumeric] = useState<number | null>(null)
   const [isLoadingTotalPoolValue, setIsLoadingTotalPoolValue] = useState(false)
+  const [positionNotional, setPositionNotional] = useState<number | null>(null)
+  const [positionPnl, setPositionPnl] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -339,6 +342,7 @@ function PoolOverviewSection() {
         }
 
         if (typeof data.totalUsdValue === "number") {
+          setTotalPoolNumeric(data.totalUsdValue)
           const formatted = data.totalUsdValue.toLocaleString("en-US", {
             style: "currency",
             currency: "USD",
@@ -346,10 +350,12 @@ function PoolOverviewSection() {
           })
           setTotalPoolValue(formatted)
         } else {
+          setTotalPoolNumeric(null)
           setTotalPoolValue(null)
         }
       } catch {
         if (!cancelled) {
+          setTotalPoolNumeric(null)
           setTotalPoolValue(null)
         }
       } finally {
@@ -365,6 +371,107 @@ function PoolOverviewSection() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadPositionNotional() {
+      try {
+        const response = await fetch("/api/crypto-positions")
+        if (!response.ok) {
+          if (!cancelled) {
+            setPositionNotional(null)
+            setPositionPnl(null)
+          }
+          return
+        }
+
+        const data = (await response.json()) as {
+          position?: {
+            notional: number | null
+            pnl: number | null
+          } | null
+        }
+
+        if (cancelled) {
+          return
+        }
+
+        if (data.position) {
+          if (typeof data.position.notional === "number") {
+            setPositionNotional(Math.max(0, data.position.notional))
+          } else {
+            setPositionNotional(null)
+          }
+
+          if (typeof data.position.pnl === "number") {
+            setPositionPnl(data.position.pnl)
+          } else {
+            setPositionPnl(null)
+          }
+        } else {
+          setPositionNotional(null)
+          setPositionPnl(null)
+        }
+      } catch {
+        if (!cancelled) {
+          setPositionNotional(null)
+          setPositionPnl(null)
+        }
+      }
+    }
+
+    loadPositionNotional()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const availableCapitalNumeric =
+    totalPoolNumeric !== null && positionNotional !== null
+      ? Math.max(0, totalPoolNumeric - positionNotional)
+      : null
+
+  const availableCapitalDisplay =
+    availableCapitalNumeric !== null
+      ? availableCapitalNumeric.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 2,
+        })
+      : "—"
+
+  const capitalInPositionDisplay =
+    positionNotional !== null
+      ? positionNotional.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 2,
+        })
+      : "—"
+
+  const poolPnlDisplay =
+    positionPnl !== null
+      ? (() => {
+          const abs = Math.abs(positionPnl)
+          const formatted = abs.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          })
+
+          if (positionPnl > 0) {
+            return `+${formatted}`
+          }
+
+          if (positionPnl < 0) {
+            return `-${formatted}`
+          }
+
+          return formatted
+        })()
+      : "—"
 
   return (
     <motion.section
@@ -431,7 +538,7 @@ function PoolOverviewSection() {
               <p className="mt-1 text-lg font-semibold text-slate-900">
                 {isLoadingTotalPoolValue
                   ? "Loading..."
-                  : totalPoolValue ?? "$1,250,000"}
+                  : totalPoolValue ?? "$0.00"}
               </p>
               <p className="text-[11px] text-emerald-600">+4.3% today</p>
             </div>
@@ -440,7 +547,7 @@ function PoolOverviewSection() {
                 Available capital
               </p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
-                $420,000
+                {availableCapitalDisplay}
               </p>
               <p className="text-[11px] text-slate-500">Not yet allocated to AI</p>
             </div>
@@ -449,7 +556,7 @@ function PoolOverviewSection() {
                 Capital in position
               </p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
-                $830,000
+                {capitalInPositionDisplay}
               </p>
               <p className="text-[11px] text-slate-500">Across active trading lanes</p>
             </div>
@@ -458,7 +565,7 @@ function PoolOverviewSection() {
                 Current pool PnL
               </p>
               <p className="mt-1 text-lg font-semibold text-emerald-600">
-                +$82,410
+                {poolPnlDisplay}
               </p>
               <p className="text-[11px] text-slate-500">
                 Realized + unrealized since epoch start
@@ -618,40 +725,6 @@ function PoolAdvancedChartSection() {
                   {position.entryPrice !== null ? (
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
                       Entry {position.entryPrice.toFixed(6)}
-                    </span>
-                  ) : null}
-                  {position.notional !== null ? (
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
-                      Notional{" "}
-                      {position.notional.toLocaleString("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                        maximumFractionDigits: 2,
-                      })}
-                    </span>
-                  ) : null}
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
-                    PnL{" "}
-                    <span
-                      className={
-                        "font-semibold " +
-                        (position.pnl !== null && position.pnl !== 0
-                          ? position.pnl > 0
-                            ? "text-emerald-600"
-                            : "text-rose-600"
-                          : "text-slate-700")
-                      }
-                    >
-                      {position.pnl !== null
-                        ? `${position.pnl > 0 ? "+" : ""}${position.pnl.toFixed(4)}`
-                        : "0.0000"}
-                    </span>
-                  </span>
-                  {position.isolationType ? (
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600">
-                      {position.isolationType === "ISOLATED_MARGIN"
-                        ? "Isolated margin"
-                        : position.isolationType}
                     </span>
                   ) : null}
                 </>
