@@ -320,9 +320,14 @@ function PoolOverviewSection() {
 
   useEffect(() => {
     let cancelled = false
+    const intervalId: number | undefined = window.setInterval(() => {
+      loadTotalPoolValue(false)
+    }, 10000)
 
-    async function loadTotalPoolValue() {
-      setIsLoadingTotalPoolValue(true)
+    async function loadTotalPoolValue(showLoading: boolean) {
+      if (showLoading) {
+        setIsLoadingTotalPoolValue(true)
+      }
 
       try {
         const response = await fetch("/api/crypto-balance")
@@ -359,21 +364,27 @@ function PoolOverviewSection() {
           setTotalPoolValue(null)
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && showLoading) {
           setIsLoadingTotalPoolValue(false)
         }
       }
     }
 
-    loadTotalPoolValue()
+    loadTotalPoolValue(true)
 
     return () => {
       cancelled = true
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId)
+      }
     }
   }, [])
 
   useEffect(() => {
     let cancelled = false
+    const intervalId: number | undefined = window.setInterval(() => {
+      loadPositionNotional()
+    }, 10000)
 
     async function loadPositionNotional() {
       try {
@@ -425,6 +436,9 @@ function PoolOverviewSection() {
 
     return () => {
       cancelled = true
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId)
+      }
     }
   }, [])
 
