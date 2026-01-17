@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import crypto from "crypto"
 
 const API_URL = "https://api.crypto.com/exchange/v1/private/get-positions"
-const INSTRUMENT = "HBARUSD-PERP"
+const INSTRUMENT = "CROUSD-PERP"
 
 function getCredentials() {
   const apiKey = process.env.CRYPTOCOM_API_KEY

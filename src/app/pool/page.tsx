@@ -626,6 +626,13 @@ function PoolOverviewSection() {
         })()
       : "—"
 
+  const poolPnlClass =
+    positionPnl !== null && positionPnl !== 0
+      ? positionPnl > 0
+        ? "text-emerald-600"
+        : "text-rose-600"
+      : "text-slate-900"
+
   const poolPnlPercent =
     positionPnl !== null &&
     positionNotional !== null &&
@@ -936,7 +943,7 @@ function PoolOverviewSection() {
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 Current pool PnL
               </p>
-              <p className="mt-1 text-lg font-semibold text-emerald-600">
+              <p className={`mt-1 text-lg font-semibold ${poolPnlClass}`}>
                 {poolPnlDisplay}
               </p>
               <p className="text-[11px] text-slate-500">
