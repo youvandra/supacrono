@@ -1270,6 +1270,98 @@ function AITradingStatusSection() {
 }
 
 function CapitalDistributionSection() {
+  const [onchainTotals, setOnchainTotals] = useState<{
+    totalInPosition: number
+    totalTakerInPosition: number
+    totalAbsorberInPosition: number
+  } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadOnchainRoleTotals() {
+      setIsLoading(true)
+
+      try {
+        const contract = getSupaPoolContract(RPC_PROVIDER)
+        const [
+          totalInPositionRaw,
+          totalTakerInPositionRaw,
+          totalAbsorberInPositionRaw,
+        ] = await Promise.all([
+          contract.totalInPosition(),
+          contract.totalTakerInPosition(),
+          contract.totalAbsorberInPosition(),
+        ])
+
+        if (cancelled) {
+          return
+        }
+
+        const toNumber = (value: bigint) => Number(formatUnits(value, 18))
+
+        setOnchainTotals({
+          totalInPosition: toNumber(totalInPositionRaw),
+          totalTakerInPosition: toNumber(totalTakerInPositionRaw),
+          totalAbsorberInPosition: toNumber(totalAbsorberInPositionRaw),
+        })
+      } catch {
+        if (!cancelled) {
+          setOnchainTotals(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadOnchainRoleTotals()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const totalInPosition =
+    onchainTotals !== null ? onchainTotals.totalInPosition : 0
+  const takerInPosition =
+    onchainTotals !== null ? onchainTotals.totalTakerInPosition : 0
+  const absorberInPosition =
+    onchainTotals !== null ? onchainTotals.totalAbsorberInPosition : 0
+
+  const takerPercent =
+    totalInPosition > 0 ? (takerInPosition / totalInPosition) * 100 : null
+  const absorberPercent =
+    totalInPosition > 0 ? (absorberInPosition / totalInPosition) * 100 : null
+
+  const takerPercentDisplay =
+    takerPercent !== null ? `${takerPercent.toFixed(1)}%` : "—"
+  const absorberPercentDisplay =
+    absorberPercent !== null ? `${absorberPercent.toFixed(1)}%` : "—"
+
+  const takerAmountDisplay = isLoading
+    ? "Loading..."
+    : `${takerInPosition.toLocaleString("en-US", {
+        maximumFractionDigits: 2,
+      })} tCRO`
+
+  const absorberAmountDisplay = isLoading
+    ? "Loading..."
+    : `${absorberInPosition.toLocaleString("en-US", {
+        maximumFractionDigits: 2,
+      })} tCRO`
+
+  const takerBarWidth =
+    takerPercent !== null
+      ? `${Math.max(0, Math.min(100, takerPercent))}%`
+      : "0%"
+  const absorberBarWidth =
+    absorberPercent !== null
+      ? `${Math.max(0, Math.min(100, absorberPercent))}%`
+      : "0%"
+
   return (
     <motion.section
       className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
@@ -1289,10 +1381,16 @@ function CapitalDistributionSection() {
             <div>
               <div className="flex items-center justify-between text-xs">
                 <p className="font-medium text-slate-900">Taker capital</p>
-                <p className="text-slate-600">$750,000 · 60% of pool</p>
+                <p className="text-slate-600">
+                  {takerAmountDisplay} · {takerPercentDisplay} of in-position
+                  capital
+                </p>
               </div>
               <div className="mt-2 h-2 rounded-full bg-slate-100">
-                <div className="h-2 w-[60%] rounded-full bg-emerald-500" />
+                <div
+                  className="h-2 rounded-full bg-emerald-500"
+                  style={{ width: takerBarWidth }}
+                />
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
                 Bears more PnL volatility; receives upside after Absorber yield
@@ -1303,10 +1401,16 @@ function CapitalDistributionSection() {
             <div>
               <div className="flex items-center justify-between text-xs">
                 <p className="font-medium text-slate-900">Absorber capital</p>
-                <p className="text-slate-600">$500,000 · 40% of pool</p>
+                <p className="text-slate-600">
+                  {absorberAmountDisplay} · {absorberPercentDisplay} of
+                  in-position capital
+                </p>
               </div>
               <div className="mt-2 h-2 rounded-full bg-slate-100">
-                <div className="h-2 w-[40%] rounded-full bg-slate-900" />
+                <div
+                  className="h-2 rounded-full bg-slate-900"
+                  style={{ width: absorberBarWidth }}
+                />
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
                 Provides buffer against losses; receives priority yield before
