@@ -456,9 +456,9 @@ function PoolOverviewSection() {
         })
       : "—"
 
-  const capitalInPositionDisplay =
-    positionNotional !== null
-      ? positionNotional.toLocaleString("en-US", {
+  const poolInPositionDisplay =
+    totalPoolNumeric !== null
+      ? totalPoolNumeric.toLocaleString("en-US", {
           style: "currency",
           currency: "USD",
           maximumFractionDigits: 2,
@@ -491,8 +491,10 @@ function PoolOverviewSection() {
       : "—"
 
   const poolPnlPercent =
-    positionPnl !== null && totalPoolNumeric !== null && totalPoolNumeric > 0
-      ? (positionPnl/(totalPoolNumeric - positionPnl)) * 100
+    positionPnl !== null &&
+    totalPoolNumeric !== null &&
+    totalPoolNumeric > 0
+      ? (positionPnl / totalPoolNumeric) * 100
       : null
 
   const poolPnlPercentDisplay =
@@ -536,9 +538,8 @@ function PoolOverviewSection() {
             in the pool as a Taker or Absorber.
           </p>
           <div className="mt-1 grid gap-2 sm:grid-cols-3">
-            <MetricPill label="Pending Deposit" value="0.00 USDT" subtle />
-            <MetricPill label="Deposited" value="0.00 USDT" subtle />
-            <MetricPill label="Accrued yield" value="0.00 USDT" subtle />
+            <MetricPill label="Available capital" value="0.00 USDT" subtle />
+            <MetricPill label="Capital in position" value="0.00 USDT" subtle />
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button className="rounded-full px-4 text-[11px] font-medium">
@@ -580,7 +581,7 @@ function PoolOverviewSection() {
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Available capital
+                Available pool
               </p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
                 {availableCapitalDisplay}
@@ -589,10 +590,10 @@ function PoolOverviewSection() {
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Capital in position
+                Pool in position
               </p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
-                {capitalInPositionDisplay}
+                {poolInPositionDisplay}
               </p>
               <p className="text-[11px] text-slate-500">Across active trading lanes</p>
             </div>
