@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowUpRight, Wallet } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, Plus, Wallet } from "lucide-react"
 import {
   BrowserProvider,
   Contract,
@@ -349,7 +349,6 @@ function FooterSection() {
 
 function PoolOverviewSection() {
   const [totalPoolValue, setTotalPoolValue] = useState<string | null>(null)
-  const [totalPoolNumeric, setTotalPoolNumeric] = useState<number | null>(null)
   const [isLoadingTotalPoolValue, setIsLoadingTotalPoolValue] = useState(false)
   const [positionNotional, setPositionNotional] = useState<number | null>(null)
   const [positionPnl, setPositionPnl] = useState<number | null>(null)
@@ -399,7 +398,6 @@ function PoolOverviewSection() {
         }
 
         if (typeof data.totalUsdValue === "number") {
-          setTotalPoolNumeric(data.totalUsdValue)
           const formatted = data.totalUsdValue.toLocaleString("en-US", {
             style: "currency",
             currency: "USD",
@@ -407,12 +405,10 @@ function PoolOverviewSection() {
           })
           setTotalPoolValue(formatted)
         } else {
-          setTotalPoolNumeric(null)
           setTotalPoolValue(null)
         }
       } catch {
         if (!cancelled) {
-          setTotalPoolNumeric(null)
           setTotalPoolValue(null)
         }
       } finally {
@@ -605,29 +601,6 @@ function PoolOverviewSection() {
       }
     }
   }, [])
-
-  const availableCapitalNumeric =
-    totalPoolNumeric !== null && positionNotional !== null
-      ? Math.max(0, totalPoolNumeric - positionNotional)
-      : null
-
-  const availableCapitalDisplay =
-    availableCapitalNumeric !== null
-      ? availableCapitalNumeric.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 2,
-        })
-      : "—"
-
-  const poolInPositionDisplay =
-    positionNotional !== null
-      ? positionNotional.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 2,
-        })
-      : "—"
 
   const poolStatus =
     positionNotional !== null && positionNotional > 0 ? "Active" : "Inactive"
@@ -873,7 +846,7 @@ function PoolOverviewSection() {
             and how profits and losses flow between Takers and Absorbers.
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-600 sm:w-1/2 sm:text-sm">
+        <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-600 sm:w-1/2 sm:text-sm">
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
             Your position
           </p>
@@ -881,32 +854,44 @@ function PoolOverviewSection() {
             Connect a wallet on Cronos EVM to preview how your capital would sit
             in the pool as a Taker or Absorber.
           </p>
-          <div className="mt-1 grid gap-2 sm:grid-cols-3">
-            <MetricPill
-              label="Available capital"
-              value={userAvailableDisplay}
-              subtle
-            />
-            <MetricPill
-              label="Capital in position"
-              value={userInPositionDisplay}
-              subtle
-            />
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button
-              className="rounded-full px-4 text-[11px] font-medium"
-              onClick={handleAddCapital}
-              disabled={isDepositing}
-            >
-              {isDepositing ? "Adding..." : "Add capital"}
-            </Button>
-            <Button
-              variant="outline"
-              className="rounded-full border-slate-200 bg-white px-4 text-[11px] font-medium hover:bg-slate-50"
-            >
-              Withdraw
-            </Button>
+          <div className="mt-1 flex items-stretch justify-between gap-3">
+            <div className="flex-1 flex flex-col justify-between">
+              <div className="grid h-full gap-2 sm:grid-cols-2">
+                <MetricPill
+                  label="Available capital"
+                  value={userAvailableDisplay}
+                  subtle
+                />
+                <MetricPill
+                  label="Capital in position"
+                  value={userInPositionDisplay}
+                  subtle
+                />
+              </div>
+            </div>
+            <div className="flex w-32 flex-col items-end justify-between gap-2 sm:w-36">
+              <Button
+                className="w-full rounded-full px-4 text-[11px] font-medium"
+                onClick={handleAddCapital}
+                disabled={isDepositing}
+              >
+                {isDepositing ? (
+                  "Adding..."
+                ) : (
+                  <>
+                    <Plus className="mr-1.5 h-3 w-3" aria-hidden="true" />
+                    Add capital
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full rounded-full border-slate-200 bg-white px-4 text-[11px] font-medium hover:bg-slate-50"
+              >
+                <ArrowDownLeft className="mr-1.5 h-3 w-3" aria-hidden="true" />
+                Withdraw
+              </Button>
+            </div>
           </div>
           {depositError ? (
             <p className="text-[10px] text-rose-600">{depositError}</p>
@@ -924,7 +909,7 @@ function PoolOverviewSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 Total pool value
@@ -937,24 +922,6 @@ function PoolOverviewSection() {
               <p className={`text-[11px] ${poolPnlPercentClass}`}>
                 {poolPnlPercentDisplay}
               </p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Available pool
-              </p>
-              <p className="mt-1 text-lg font-semibold text-slate-900">
-                {availableCapitalDisplay}
-              </p>
-              <p className="text-[11px] text-slate-500">Not yet allocated to AI</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Pool in position
-              </p>
-              <p className="mt-1 text-lg font-semibold text-slate-900">
-                {poolInPositionDisplay}
-              </p>
-              <p className="text-[11px] text-slate-500">Across active trading lanes</p>
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
