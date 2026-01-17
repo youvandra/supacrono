@@ -465,11 +465,24 @@ function PoolOverviewSection() {
           return
         }
 
-        const available = Number(formatUnits(user.available, 18))
-        const inPosition = Number(formatUnits(user.inPosition, 18))
+        const takerAvailable = Number(
+          formatUnits(user.taker.available, 18)
+        )
+        const takerInPosition = Number(
+          formatUnits(user.taker.inPosition, 18)
+        )
+        const absorberAvailable = Number(
+          formatUnits(user.absorber.available, 18)
+        )
+        const absorberInPosition = Number(
+          formatUnits(user.absorber.inPosition, 18)
+        )
 
-        setUserAvailable(available)
-        setUserInPosition(inPosition)
+        const totalAvailable = takerAvailable + absorberAvailable
+        const totalInPosition = takerInPosition + absorberInPosition
+
+        setUserAvailable(totalAvailable)
+        setUserInPosition(totalInPosition)
       } catch {
         if (!cancelled) {
           setUserAvailable(null)
@@ -736,7 +749,7 @@ function PoolOverviewSection() {
       )
 
       const value = parseUnits(trimmedAmount, 18)
-      const role = depositRole === "taker" ? 1 : 2
+      const role = depositRole === "taker" ? 1 : 0
 
       const tx = await contract.deposit(role, { value })
       await tx.wait()
@@ -744,11 +757,24 @@ function PoolOverviewSection() {
       setAccount(signerAddress)
 
       const user = await contract.users(signerAddress)
-      const available = Number(formatUnits(user.available, 18))
-      const inPosition = Number(formatUnits(user.inPosition, 18))
+      const takerAvailable = Number(
+        formatUnits(user.taker.available, 18)
+      )
+      const takerInPosition = Number(
+        formatUnits(user.taker.inPosition, 18)
+      )
+      const absorberAvailable = Number(
+        formatUnits(user.absorber.available, 18)
+      )
+      const absorberInPosition = Number(
+        formatUnits(user.absorber.inPosition, 18)
+      )
 
-      setUserAvailable(available)
-      setUserInPosition(inPosition)
+      const totalAvailable = takerAvailable + absorberAvailable
+      const totalInPosition = takerInPosition + absorberInPosition
+
+      setUserAvailable(totalAvailable)
+      setUserInPosition(totalInPosition)
       setShowDepositModal(false)
     } catch (error) {
       const message =

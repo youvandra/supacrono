@@ -33,6 +33,11 @@
 				"type": "address"
 			},
 			{
+				"internalType": "enum SupaCapitalPool.Role",
+				"name": "role",
+				"type": "uint8"
+			},
+			{
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
@@ -51,6 +56,11 @@
 				"type": "address"
 			},
 			{
+				"internalType": "enum SupaCapitalPool.Role",
+				"name": "role",
+				"type": "uint8"
+			},
+			{
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
@@ -67,6 +77,11 @@
 				"internalType": "address",
 				"name": "user",
 				"type": "address"
+			},
+			{
+				"internalType": "enum SupaCapitalPool.Role",
+				"name": "role",
+				"type": "uint8"
 			}
 		],
 		"name": "reportProfit",
@@ -86,6 +101,11 @@
 				"type": "address"
 			},
 			{
+				"internalType": "enum SupaCapitalPool.Role",
+				"name": "role",
+				"type": "uint8"
+			},
+			{
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
@@ -98,6 +118,11 @@
 	},
 	{
 		"inputs": [
+			{
+				"internalType": "enum SupaCapitalPool.Role",
+				"name": "role",
+				"type": "uint8"
+			},
 			{
 				"internalType": "uint256",
 				"name": "amount",
@@ -190,19 +215,38 @@
 		"name": "users",
 		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "available",
-				"type": "uint256"
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "available",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "inPosition",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct SupaCapitalPool.CapitalBucket",
+				"name": "taker",
+				"type": "tuple"
 			},
 			{
-				"internalType": "uint256",
-				"name": "inPosition",
-				"type": "uint256"
-			},
-			{
-				"internalType": "enum SupaCapitalPool.Role",
-				"name": "role",
-				"type": "uint8"
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "available",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "inPosition",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct SupaCapitalPool.CapitalBucket",
+				"name": "absorber",
+				"type": "tuple"
 			}
 		],
 		"stateMutability": "view",

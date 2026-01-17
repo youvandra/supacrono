@@ -301,6 +301,8 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
   const [isLoadingPool, setIsLoadingPool] = useState(false)
   const [userAvailable, setUserAvailable] = useState<number | null>(null)
   const [userInPosition, setUserInPosition] = useState<number | null>(null)
+  const [hasTakerRole, setHasTakerRole] = useState(false)
+  const [hasAbsorberRole, setHasAbsorberRole] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -309,6 +311,8 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
       if (!account) {
         setUserAvailable(null)
         setUserInPosition(null)
+        setHasTakerRole(false)
+        setHasAbsorberRole(false)
         return
       }
 
@@ -326,15 +330,32 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
           return
         }
 
-        const available = Number(formatUnits(user.available, 18))
-        const inPosition = Number(formatUnits(user.inPosition, 18))
+        const takerAvailable = Number(
+          formatUnits(user.taker.available, 18)
+        )
+        const takerInPosition = Number(
+          formatUnits(user.taker.inPosition, 18)
+        )
+        const absorberAvailable = Number(
+          formatUnits(user.absorber.available, 18)
+        )
+        const absorberInPosition = Number(
+          formatUnits(user.absorber.inPosition, 18)
+        )
 
-        setUserAvailable(available)
-        setUserInPosition(inPosition)
+        const totalAvailable = takerAvailable + absorberAvailable
+        const totalInPosition = takerInPosition + absorberInPosition
+
+        setUserAvailable(totalAvailable)
+        setUserInPosition(totalInPosition)
+        setHasTakerRole(takerAvailable > 0 || takerInPosition > 0)
+        setHasAbsorberRole(absorberAvailable > 0 || absorberInPosition > 0)
       } catch {
         if (!cancelled) {
           setUserAvailable(null)
           setUserInPosition(null)
+          setHasTakerRole(false)
+          setHasAbsorberRole(false)
         }
       } finally {
         if (!cancelled) {
@@ -354,6 +375,24 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
     userAvailable !== null && userInPosition !== null
       ? userAvailable + userInPosition
       : null
+
+  const withdrawableDisplay = isLoadingPool
+    ? "Loading..."
+    : userAvailable !== null
+      ? `${userAvailable.toLocaleString("en-US", {
+          maximumFractionDigits: 4,
+        })} tCRO`
+      : "0.00 tCRO"
+
+  const activeRoleDisplay = isLoadingPool
+    ? "Loading..."
+    : hasTakerRole && hasAbsorberRole
+      ? "Taker + Absorber"
+      : hasTakerRole
+        ? "Taker"
+        : hasAbsorberRole
+          ? "Absorber"
+          : "None"
 
   const totalCommittedDisplay = isLoadingPool
     ? "Loading..."
@@ -407,19 +446,21 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
         </div>
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            Realized yield
+            Profit balance
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            $3,280
+            {withdrawableDisplay}
           </p>
-          <p className="text-[11px] text-slate-500">Across all epochs</p>
+          <p className="text-[11px] text-slate-500">
+            Available to withdraw from the pool.
+          </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
             Active roles
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            Taker + Absorber
+            {activeRoleDisplay}
           </p>
           <p className="text-[11px] text-slate-500">
             Split exposure across upside and buffer capital.
@@ -432,9 +473,12 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
 
 function RoleBreakdownSection({ account }: { account: string | null }) {
   const [isLoading, setIsLoading] = useState(false)
-  const [userRole, setUserRole] = useState<number | null>(null)
-  const [userAvailable, setUserAvailable] = useState<number | null>(null)
-  const [userInPosition, setUserInPosition] = useState<number | null>(null)
+  const [userTakerInPosition, setUserTakerInPosition] = useState<number | null>(
+    null
+  )
+  const [userAbsorberInPosition, setUserAbsorberInPosition] = useState<
+    number | null
+  >(null)
   const [totalTakerInPosition, setTotalTakerInPosition] = useState<
     number | null
   >(null)
@@ -447,9 +491,8 @@ function RoleBreakdownSection({ account }: { account: string | null }) {
 
     async function loadRoleBreakdown() {
       if (!account) {
-        setUserRole(null)
-        setUserAvailable(null)
-        setUserInPosition(null)
+        setUserTakerInPosition(null)
+        setUserAbsorberInPosition(null)
         setTotalTakerInPosition(null)
         setTotalAbsorberInPosition(null)
         return
@@ -474,20 +517,21 @@ function RoleBreakdownSection({ account }: { account: string | null }) {
           return
         }
 
-        const available = Number(formatUnits(user.available, 18))
-        const inPosition = Number(formatUnits(user.inPosition, 18))
-        const role = Number(user.role)
+        const takerInPosition = Number(
+          formatUnits(user.taker.inPosition, 18)
+        )
+        const absorberInPosition = Number(
+          formatUnits(user.absorber.inPosition, 18)
+        )
 
-        setUserAvailable(available)
-        setUserInPosition(inPosition)
-        setUserRole(role)
+        setUserTakerInPosition(takerInPosition)
+        setUserAbsorberInPosition(absorberInPosition)
         setTotalTakerInPosition(Number(formatUnits(totalTakerRaw, 18)))
         setTotalAbsorberInPosition(Number(formatUnits(totalAbsorberRaw, 18)))
       } catch {
         if (!cancelled) {
-          setUserRole(null)
-          setUserAvailable(null)
-          setUserInPosition(null)
+          setUserTakerInPosition(null)
+          setUserAbsorberInPosition(null)
           setTotalTakerInPosition(null)
           setTotalAbsorberInPosition(null)
         }
@@ -506,9 +550,13 @@ function RoleBreakdownSection({ account }: { account: string | null }) {
   }, [account])
 
   const takerAmount =
-    userRole === 1 && userInPosition !== null ? userInPosition : 0
+    userTakerInPosition !== null && userTakerInPosition > 0
+      ? userTakerInPosition
+      : 0
   const absorberAmount =
-    userRole === 2 && userInPosition !== null ? userInPosition : 0
+    userAbsorberInPosition !== null && userAbsorberInPosition > 0
+      ? userAbsorberInPosition
+      : 0
 
   const takerAmountDisplay = isLoading
     ? "Loading..."
