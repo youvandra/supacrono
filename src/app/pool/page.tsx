@@ -312,6 +312,60 @@ function FooterSection() {
 }
 
 function PoolOverviewSection() {
+  const [totalPoolValue, setTotalPoolValue] = useState<string | null>(null)
+  const [isLoadingTotalPoolValue, setIsLoadingTotalPoolValue] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadTotalPoolValue() {
+      setIsLoadingTotalPoolValue(true)
+
+      try {
+        const response = await fetch("/api/crypto-balance")
+        if (!response.ok) {
+          if (!cancelled) {
+            setTotalPoolValue(null)
+          }
+          return
+        }
+
+        const data = (await response.json()) as {
+          totalUsdValue?: number | null
+        }
+
+        if (cancelled) {
+          return
+        }
+
+        if (typeof data.totalUsdValue === "number") {
+          const formatted = data.totalUsdValue.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          })
+          setTotalPoolValue(formatted)
+        } else {
+          setTotalPoolValue(null)
+        }
+      } catch {
+        if (!cancelled) {
+          setTotalPoolValue(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingTotalPoolValue(false)
+        }
+      }
+    }
+
+    loadTotalPoolValue()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <motion.section
       className="flex flex-col gap-6 border-b border-slate-200/80 pb-8"
@@ -375,7 +429,9 @@ function PoolOverviewSection() {
                 Total pool value
               </p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
-                $1,250,000
+                {isLoadingTotalPoolValue
+                  ? "Loading..."
+                  : totalPoolValue ?? "$1,250,000"}
               </p>
               <p className="text-[11px] text-emerald-600">+4.3% today</p>
             </div>
