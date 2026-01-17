@@ -257,7 +257,7 @@ export default function PortfolioPage() {
       {isConnected ? (
         <main className="mx-auto flex min-h-[calc(100vh-80px)] max-w-6xl flex-col px-4 pb-16 pt-10 sm:px-6 lg:px-8">
           <PortfolioOverviewSection account={account} />
-          <RoleBreakdownSection />
+          <RoleBreakdownSection account={account} />
           <PerformanceAndRiskSection />
           <ActivitySection />
         </main>
@@ -430,10 +430,122 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
   )
 }
 
-function RoleBreakdownSection() {
+function RoleBreakdownSection({ account }: { account: string | null }) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [userRole, setUserRole] = useState<number | null>(null)
+  const [userAvailable, setUserAvailable] = useState<number | null>(null)
+  const [userInPosition, setUserInPosition] = useState<number | null>(null)
+  const [totalTakerInPosition, setTotalTakerInPosition] = useState<
+    number | null
+  >(null)
+  const [totalAbsorberInPosition, setTotalAbsorberInPosition] = useState<
+    number | null
+  >(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadRoleBreakdown() {
+      if (!account) {
+        setUserRole(null)
+        setUserAvailable(null)
+        setUserInPosition(null)
+        setTotalTakerInPosition(null)
+        setTotalAbsorberInPosition(null)
+        return
+      }
+
+      setIsLoading(true)
+
+      try {
+        const contract = new Contract(
+          SUPA_CP_CONTRACT_ADDRESS,
+          SUPA_CP_ABI,
+          RPC_PROVIDER
+        )
+
+        const [user, totalTakerRaw, totalAbsorberRaw] = await Promise.all([
+          contract.users(account),
+          contract.totalTakerInPosition(),
+          contract.totalAbsorberInPosition(),
+        ])
+
+        if (cancelled) {
+          return
+        }
+
+        const available = Number(formatUnits(user.available, 18))
+        const inPosition = Number(formatUnits(user.inPosition, 18))
+        const role = Number(user.role)
+
+        setUserAvailable(available)
+        setUserInPosition(inPosition)
+        setUserRole(role)
+        setTotalTakerInPosition(Number(formatUnits(totalTakerRaw, 18)))
+        setTotalAbsorberInPosition(Number(formatUnits(totalAbsorberRaw, 18)))
+      } catch {
+        if (!cancelled) {
+          setUserRole(null)
+          setUserAvailable(null)
+          setUserInPosition(null)
+          setTotalTakerInPosition(null)
+          setTotalAbsorberInPosition(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadRoleBreakdown()
+
+    return () => {
+      cancelled = true
+    }
+  }, [account])
+
+  const takerAmount =
+    userRole === 1 && userInPosition !== null ? userInPosition : 0
+  const absorberAmount =
+    userRole === 2 && userInPosition !== null ? userInPosition : 0
+
+  const takerAmountDisplay = isLoading
+    ? "Loading..."
+    : `${takerAmount.toLocaleString("en-US", {
+        maximumFractionDigits: 4,
+      })} tCRO`
+
+  const absorberAmountDisplay = isLoading
+    ? "Loading..."
+    : `${absorberAmount.toLocaleString("en-US", {
+        maximumFractionDigits: 4,
+      })} tCRO`
+
+  const takerSharePercent =
+    totalTakerInPosition !== null &&
+    totalTakerInPosition > 0 &&
+    takerAmount > 0
+      ? (takerAmount / totalTakerInPosition) * 100
+      : null
+
+  const absorberSharePercent =
+    totalAbsorberInPosition !== null &&
+    totalAbsorberInPosition > 0 &&
+    absorberAmount > 0
+      ? (absorberAmount / totalAbsorberInPosition) * 100
+      : null
+
+  const takerShareDisplay =
+    takerSharePercent !== null ? `${takerSharePercent.toFixed(2)}%` : "0.00%"
+  const absorberShareDisplay =
+    absorberSharePercent !== null
+      ? `${absorberSharePercent.toFixed(2)}%`
+      : "0.00%"
+
   return (
     <motion.section
-      className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
+      className="mt-10"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -451,9 +563,10 @@ function RoleBreakdownSection() {
               <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
                 Taker capital
               </p>
-              <p className="text-lg font-semibold text-slate-900">$78,900</p>
-              <p className="text-[11px] text-emerald-700">+11.6% vs deposit</p>
-              <p className="text-xs text-slate-600">
+              <p className="text-lg font-semibold text-slate-900">
+                {takerAmountDisplay}
+              </p>
+              <p className="text-[11px] text-emerald-700">
                 Upside-exposed share tokens that participate in AI trading
                 gains after Absorber yield and protocol fees.
               </p>
@@ -462,20 +575,23 @@ function RoleBreakdownSection() {
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-700">
                 Absorber capital
               </p>
-              <p className="text-lg font-semibold text-slate-900">$45,600</p>
-              <p className="text-[11px] text-emerald-600">9.4% blended APY</p>
-              <p className="text-xs text-slate-600">
+              <p className="text-lg font-semibold text-slate-900">
+                {absorberAmountDisplay}
+              </p>
+              <p className="text-[11px] text-emerald-600">
                 Buffer capital that earns priority yield while absorbing
                 downside within configured drawdown limits.
               </p>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div>
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 Taker share of pool
               </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">6.3%</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">
+                {takerShareDisplay}
+              </p>
               <p className="text-[11px] text-slate-500">
                 Portion of total Taker supply you own.
               </p>
@@ -484,64 +600,12 @@ function RoleBreakdownSection() {
               <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 Absorber share of pool
               </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">3.1%</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">
+                {absorberShareDisplay}
+              </p>
               <p className="text-[11px] text-slate-500">
                 Portion of total Absorber supply you own.
               </p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Wallets linked
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">3</p>
-              <p className="text-[11px] text-slate-500">
-                Aggregating balances across Cronos EVM wallets.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-slate-200 bg-white/95">
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">
-            Wallet breakdown
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4 text-xs text-slate-600">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Primary trading wallet
-                </p>
-                <p className="text-sm font-semibold text-slate-900">
-                  0x3a9d...bE21
-                </p>
-              </div>
-              <p className="text-xs font-semibold text-slate-900">$82,300</p>
-            </div>
-            <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Absorber vault
-                </p>
-                <p className="text-sm font-semibold text-slate-900">
-                  0x91f4...c812
-                </p>
-              </div>
-              <p className="text-xs font-semibold text-slate-900">$28,700</p>
-            </div>
-            <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Team / strategy wallet
-                </p>
-                <p className="text-sm font-semibold text-slate-900">
-                  0xd204...10a4
-                </p>
-              </div>
-              <p className="text-xs font-semibold text-slate-900">$13,500</p>
             </div>
           </div>
         </CardContent>
