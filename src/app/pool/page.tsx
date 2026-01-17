@@ -904,9 +904,19 @@ function PoolOverviewSection() {
 
       <Card className="border-slate-200 bg-white/95 shadow-sm shadow-slate-900/5">
         <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-sm font-semibold text-slate-900">
-            Pool overview
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-sm font-semibold text-slate-900">
+              Pool overview
+            </CardTitle>
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                Pool status
+              </span>
+              <span className="text-xs font-semibold text-slate-900">
+                {poolStatus}
+              </span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="pt-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -982,30 +992,6 @@ function PoolOverviewSection() {
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-3 text-xs">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-emerald-700">
-                  AI mode
-                </span>
-                <span className="text-xs font-semibold text-emerald-700">
-                  Normal
-                </span>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                  Pool status
-                </span>
-                <span className="text-xs font-semibold text-slate-900">
-                  {poolStatus}
-                </span>
-              </div>
-            </div>
-            <p className="text-[11px] text-slate-500">
-              Judges can treat this as a live snapshot of the Supacron pool.
-            </p>
           </div>
         </CardContent>
       </Card>
