@@ -284,31 +284,6 @@ export default function PoolPage() {
   )
 }
 
-function MetricPill({
-  label,
-  value,
-  subtle,
-}: {
-  label: string
-  value: string
-  subtle?: boolean
-}) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p
-        className={`mt-1 text-sm font-semibold ${
-          subtle ? "text-slate-700" : "text-slate-900"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  )
-}
-
 function FooterSection() {
   return (
     <footer className="border-t border-slate-200 bg-white/70">
@@ -700,17 +675,15 @@ function PoolOverviewSection() {
         })} tCRO`
       : "—"
 
-  const userAvailableDisplay = isLoadingUserPosition
-    ? "Loading..."
-    : userAvailable !== null
+  const userAvailableDisplay =
+    userAvailable !== null
       ? `${userAvailable.toLocaleString("en-US", {
           maximumFractionDigits: 4,
         })} tCRO`
       : "0.00 tCRO"
 
-  const userInPositionDisplay = isLoadingUserPosition
-    ? "Loading..."
-    : userInPosition !== null
+  const userInPositionDisplay =
+    userInPosition !== null
       ? `${userInPosition.toLocaleString("en-US", {
           maximumFractionDigits: 4,
         })} tCRO`
@@ -1144,16 +1117,30 @@ function PoolOverviewSection() {
           <div className="mt-1 flex items-stretch justify-between gap-3">
             <div className="flex-1 flex flex-col justify-between">
               <div className="grid h-full gap-2 sm:grid-cols-2">
-                <MetricPill
-                  label="Available capital"
-                  value={userAvailableDisplay}
-                  subtle
-                />
-                <MetricPill
-                  label="Capital in position"
-                  value={userInPositionDisplay}
-                  subtle
-                />
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                    Available capital
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                    {isLoadingUserPosition ? (
+                      <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
+                    ) : (
+                      userAvailableDisplay
+                    )}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                    Capital in position
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                    {isLoadingUserPosition ? (
+                      <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
+                    ) : (
+                      userInPositionDisplay
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
             <div className="flex w-32 flex-col items-end justify-between gap-2 sm:w-36">
@@ -1216,9 +1203,11 @@ function PoolOverviewSection() {
                 Total pool value
               </p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
-                {isLoadingTotalPoolValue
-                  ? "Loading..."
-                  : totalPoolValue ?? "$0.00"}
+                {isLoadingTotalPoolValue ? (
+                  <span className="inline-block h-5 w-24 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  totalPoolValue ?? "$0.00"
+                )}
               </p>
               <p className={`text-[11px] ${poolPnlPercentClass}`}>
                 {poolPnlPercentDisplay}
@@ -1247,9 +1236,11 @@ function PoolOverviewSection() {
                   Available
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {isLoadingOnchainTotals
-                    ? "Loading..."
-                    : onchainTotalAvailableDisplay}
+                {isLoadingOnchainTotals ? (
+                  <span className="inline-block h-4 w-20 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  onchainTotalAvailableDisplay
+                )}
                 </p>
               </div>
               <div>
@@ -1257,9 +1248,11 @@ function PoolOverviewSection() {
                   In position
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {isLoadingOnchainTotals
-                    ? "Loading..."
-                    : onchainTotalInPositionDisplay}
+                {isLoadingOnchainTotals ? (
+                  <span className="inline-block h-4 w-20 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  onchainTotalInPositionDisplay
+                )}
                 </p>
               </div>
               <div>
@@ -1267,9 +1260,11 @@ function PoolOverviewSection() {
                   Taker in position
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {isLoadingOnchainTotals
-                    ? "Loading..."
-                    : onchainTakerInPositionDisplay}
+                {isLoadingOnchainTotals ? (
+                  <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  onchainTakerInPositionDisplay
+                )}
                 </p>
               </div>
               <div>
@@ -1277,9 +1272,11 @@ function PoolOverviewSection() {
                   Absorber in position
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {isLoadingOnchainTotals
-                    ? "Loading..."
-                    : onchainAbsorberInPositionDisplay}
+                {isLoadingOnchainTotals ? (
+                  <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  onchainAbsorberInPositionDisplay
+                )}
                 </p>
               </div>
             </div>
@@ -1399,9 +1396,7 @@ function PoolAdvancedChartSection() {
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2 text-xs">
               {isLoadingPosition ? (
-                <span className="text-[11px] text-slate-500">
-                  Loading position…
-                </span>
+                <span className="inline-block h-4 w-32 animate-pulse rounded-full bg-slate-200" />
               ) : position ? (
                 <>
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">

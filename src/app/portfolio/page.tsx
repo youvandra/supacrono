@@ -368,17 +368,15 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
       ? userAvailable + userInPosition
       : null
 
-  const withdrawableDisplay = isLoadingPool
-    ? "Loading..."
-    : userAvailable !== null
+  const withdrawableDisplay =
+    userAvailable !== null
       ? `${userAvailable.toLocaleString("en-US", {
           maximumFractionDigits: 4,
         })} tCRO`
       : "0.00 tCRO"
 
-  const totalCommittedDisplay = isLoadingPool
-    ? "Loading..."
-    : totalCommitted !== null
+  const totalCommittedDisplay =
+    totalCommitted !== null
       ? `${totalCommitted.toLocaleString("en-US", {
           maximumFractionDigits: 4,
         })} tCRO`
@@ -422,7 +420,11 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
             Total portfolio value
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            {totalCommittedDisplay}
+            {isLoadingPool ? (
+              <span className="inline-block h-5 w-28 animate-pulse rounded-full bg-slate-200" />
+            ) : (
+              totalCommittedDisplay
+            )}
           </p>
           <p className="text-[11px] text-emerald-600">+$8,420 (+7.3%)</p>
         </div>
@@ -431,7 +433,11 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
             Available Capital
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            {withdrawableDisplay}
+            {isLoadingPool ? (
+              <span className="inline-block h-5 w-24 animate-pulse rounded-full bg-slate-200" />
+            ) : (
+              withdrawableDisplay
+            )}
           </p>
           <p className="text-[11px] text-slate-500">
             Available to withdraw from the pool.
@@ -442,13 +448,15 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
             Capital in position
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            {isLoadingPool
-              ? "Loading..."
-              : userInPosition !== null
-                ? `${userInPosition.toLocaleString("en-US", {
-                    maximumFractionDigits: 4,
-                  })} tCRO`
-                : "0.00 tCRO"}
+            {isLoadingPool ? (
+              <span className="inline-block h-5 w-28 animate-pulse rounded-full bg-slate-200" />
+            ) : userInPosition !== null ? (
+              `${userInPosition.toLocaleString("en-US", {
+                maximumFractionDigits: 4,
+              })} tCRO`
+            ) : (
+              "0.00 tCRO"
+            )}
           </p>
           <p className="text-[11px] text-slate-500">
             Currently committed to active Taker and Absorber positions.
@@ -546,17 +554,13 @@ function RoleBreakdownSection({ account }: { account: string | null }) {
       ? userAbsorberInPosition
       : 0
 
-  const takerAmountDisplay = isLoading
-    ? "Loading..."
-    : `${takerAmount.toLocaleString("en-US", {
-        maximumFractionDigits: 4,
-      })} tCRO`
+  const takerAmountDisplay = `${takerAmount.toLocaleString("en-US", {
+    maximumFractionDigits: 4,
+  })} tCRO`
 
-  const absorberAmountDisplay = isLoading
-    ? "Loading..."
-    : `${absorberAmount.toLocaleString("en-US", {
-        maximumFractionDigits: 4,
-      })} tCRO`
+  const absorberAmountDisplay = `${absorberAmount.toLocaleString("en-US", {
+    maximumFractionDigits: 4,
+  })} tCRO`
 
   const takerSharePercent =
     totalTakerInPosition !== null &&
@@ -600,7 +604,11 @@ function RoleBreakdownSection({ account }: { account: string | null }) {
                 Taker capital
               </p>
               <p className="text-lg font-semibold text-slate-900">
-                {takerAmountDisplay}
+                {isLoading ? (
+                  <span className="inline-block h-5 w-24 animate-pulse rounded-full bg-emerald-200" />
+                ) : (
+                  takerAmountDisplay
+                )}
               </p>
               <p className="text-[11px] text-emerald-700">
                 Upside-exposed share tokens that participate in AI trading
@@ -612,7 +620,11 @@ function RoleBreakdownSection({ account }: { account: string | null }) {
                 Absorber capital
               </p>
               <p className="text-lg font-semibold text-slate-900">
-                {absorberAmountDisplay}
+                {isLoading ? (
+                  <span className="inline-block h-5 w-24 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  absorberAmountDisplay
+                )}
               </p>
               <p className="text-[11px] text-emerald-600">
                 Buffer capital that earns priority yield while absorbing
