@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowDownLeft, ArrowUpRight, PieChart } from "lucide-react"
+import { ArrowDownLeft, PieChart } from "lucide-react"
 import {
   BrowserProvider,
   Contract,
@@ -628,41 +628,14 @@ export function PerformanceAndRiskSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4 text-xs text-slate-600">
-          <div className="mb-4 h-40 rounded-lg border border-slate-100 bg-slate-50">
-            <MiniPerformanceChart />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                30d PnL
-              </p>
-              <p className="mt-1 text-sm font-semibold text-emerald-600">
-                +$2,980
-              </p>
-              <p className="text-[11px] text-slate-500">Blended across roles.</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Max drawdown
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">
-                -6.4%
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Versus protocol hard limit at -20%.
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Yield paid to date
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">
-                $1,940
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Absorber yield already realized.
-              </p>
-            </div>
+          <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+              Coming soon
+            </p>
+            <p className="mt-2 max-w-xs text-xs text-slate-600">
+              Personalized performance charts and PnL analytics for your
+              Supacron portfolio will appear here.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -674,53 +647,16 @@ export function PerformanceAndRiskSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4 text-xs text-slate-600">
-          <div className="space-y-3">
-            <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Utilized risk budget
-              </p>
-              <p className="text-sm font-semibold text-slate-900">
-                43% of cap
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Portion of protocol risk budget touched by your positions.
-              </p>
-            </div>
-            <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Circuit breaker distance
-              </p>
-              <p className="text-sm font-semibold text-slate-900">
-                13.6% to halt
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Further pool drawdown before trading is forcibly stopped.
-              </p>
-            </div>
-            <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                Concentration risk
-              </p>
-              <p className="text-sm font-semibold text-slate-900">
-                Moderate (2/5)
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Majority of capital sits in a single Taker lane.
-              </p>
-            </div>
+          <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+              Coming soon
+            </p>
+            <p className="mt-2 max-w-xs text-xs text-slate-600">
+              Portfolio-level risk scores and health indicators will surface
+              once live trading metrics are connected.
+            </p>
           </div>
         </CardContent>
-        <CardFooter className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
-          <p>Use governance page to see full protocol risk configuration.</p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
-          >
-            Open governance
-            <ArrowUpRight className="ml-2 h-3 w-3" aria-hidden="true" />
-          </Button>
-        </CardFooter>
       </Card>
     </motion.section>
   )
@@ -786,25 +722,3 @@ export function ActivitySection() {
     </motion.section>
   )
 }
-
-function MiniPerformanceChart() {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-    if (containerRef.current.querySelector("canvas")) return
-
-    const canvas = document.createElement("div")
-    canvas.className =
-      "h-full w-full bg-gradient-to-tr from-emerald-100 via-emerald-50 to-slate-50"
-    containerRef.current.appendChild(canvas)
-  }, [])
-
-  return (
-    <div
-      ref={containerRef}
-      className="h-full w-full overflow-hidden rounded-lg"
-    />
-  )
-}
-
