@@ -166,29 +166,14 @@ export function CapitalDistributionSection() {
             Risk health
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 pt-4 text-sm text-slate-600">
-          <div>
-            <div className="flex items-center justify-between text-xs">
-              <p className="font-medium text-slate-900">Absorber buffer health</p>
-              <p className="text-emerald-600">Safe</p>
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-slate-100">
-              <div className="h-2 w-[72%] rounded-full bg-emerald-500" />
-            </div>
-            <p className="mt-2 text-[11px] text-slate-500">
-              Current drawdown is -6.4% versus a -20% hard limit.
+        <CardContent className="pt-4 text-xs text-slate-600">
+          <div className="flex h-36 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+              Coming soon
             </p>
-          </div>
-          <div>
-            <div className="flex items-center justify-between text-xs">
-              <p className="font-medium text-slate-900">
-                Taker exposure multiplier
-              </p>
-              <p className="text-slate-900">1.8x</p>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-500">
-              Indicates how aggressively Taker capital is deployed versus base
-              pool size.
+            <p className="mt-2 max-w-xs text-xs text-slate-600">
+              Pool-level risk health indicators will appear here once live risk
+              telemetry is connected.
             </p>
           </div>
         </CardContent>
@@ -196,4 +181,3 @@ export function CapitalDistributionSection() {
     </motion.section>
   )
 }
-
