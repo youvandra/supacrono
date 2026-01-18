@@ -301,8 +301,6 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
   const [isLoadingPool, setIsLoadingPool] = useState(false)
   const [userAvailable, setUserAvailable] = useState<number | null>(null)
   const [userInPosition, setUserInPosition] = useState<number | null>(null)
-  const [hasTakerRole, setHasTakerRole] = useState(false)
-  const [hasAbsorberRole, setHasAbsorberRole] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -311,8 +309,6 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
       if (!account) {
         setUserAvailable(null)
         setUserInPosition(null)
-        setHasTakerRole(false)
-        setHasAbsorberRole(false)
         return
       }
 
@@ -348,14 +344,10 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
 
         setUserAvailable(totalAvailable)
         setUserInPosition(totalInPosition)
-        setHasTakerRole(takerAvailable > 0 || takerInPosition > 0)
-        setHasAbsorberRole(absorberAvailable > 0 || absorberInPosition > 0)
       } catch {
         if (!cancelled) {
           setUserAvailable(null)
           setUserInPosition(null)
-          setHasTakerRole(false)
-          setHasAbsorberRole(false)
         }
       } finally {
         if (!cancelled) {
@@ -383,16 +375,6 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
           maximumFractionDigits: 4,
         })} tCRO`
       : "0.00 tCRO"
-
-  const activeRoleDisplay = isLoadingPool
-    ? "Loading..."
-    : hasTakerRole && hasAbsorberRole
-      ? "Taker + Absorber"
-      : hasTakerRole
-        ? "Taker"
-        : hasAbsorberRole
-          ? "Absorber"
-          : "None"
 
   const totalCommittedDisplay = isLoadingPool
     ? "Loading..."
@@ -457,13 +439,19 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
         </div>
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
           <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            Active roles
+            Capital in position
           </p>
           <p className="mt-1 text-lg font-semibold text-slate-900">
-            {activeRoleDisplay}
+            {isLoadingPool
+              ? "Loading..."
+              : userInPosition !== null
+                ? `${userInPosition.toLocaleString("en-US", {
+                    maximumFractionDigits: 4,
+                  })} tCRO`
+                : "0.00 tCRO"}
           </p>
           <p className="text-[11px] text-slate-500">
-            Split exposure across upside and buffer capital.
+            Currently committed to active Taker and Absorber positions.
           </p>
         </div>
       </div>

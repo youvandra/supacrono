@@ -716,6 +716,93 @@ function PoolOverviewSection() {
         })} tCRO`
       : "0.00 tCRO"
 
+  function simplifyTransactionError(error: unknown, fallback: string): string {
+    if (!error) {
+      return fallback
+    }
+
+    const anyError = error as {
+      message?: string
+      shortMessage?: string
+      reason?: string
+      error?: { message?: string }
+    }
+
+    let raw = ""
+
+    if (typeof anyError.shortMessage === "string") {
+      raw = anyError.shortMessage
+    } else if (typeof anyError.reason === "string") {
+      raw = anyError.reason
+    } else if (typeof anyError.message === "string") {
+      raw = anyError.message
+    } else if (
+      anyError.error &&
+      typeof anyError.error.message === "string"
+    ) {
+      raw = anyError.error.message
+    }
+
+    if (!raw) {
+      return fallback
+    }
+
+    let simplified = raw
+
+    const executionRevertedMatch = simplified.match(
+      /execution reverted(?::|: )?\s*(.+)$/i
+    )
+    if (executionRevertedMatch && executionRevertedMatch[1]) {
+      simplified = executionRevertedMatch[1]
+    }
+
+    const reasonMatch = simplified.match(/reason="([^"]+)"/)
+    if (reasonMatch && reasonMatch[1]) {
+      simplified = reasonMatch[1]
+    }
+
+    simplified = simplified.replace(/^Error:\s*/i, "")
+    simplified = simplified.replace(/^CALL_EXCEPTION.*?:\s*/i, "")
+    simplified = simplified.replace(/\s*\(see .*$/i, "")
+    simplified = simplified.replace(
+      /\s*\[ See: https:\/\/links\.ethers\.org\/[^\]]+\]$/i,
+      ""
+    )
+
+    simplified = simplified.trim()
+
+    if (!simplified) {
+      return fallback
+    }
+
+    const mappings: { match: RegExp; message: string }[] = [
+      {
+        match: /amount exceeds available capital/i,
+        message: "Amount exceeds your available capital",
+      },
+      {
+        match: /insufficient funds/i,
+        message: "Insufficient balance to cover this transaction",
+      },
+      {
+        match: /user rejected/i,
+        message: "Transaction was rejected in your wallet",
+      },
+    ]
+
+    for (const mapping of mappings) {
+      if (mapping.match.test(simplified)) {
+        return mapping.message
+      }
+    }
+
+    if (simplified.length > 160) {
+      return `${simplified.slice(0, 157).trimEnd()}...`
+    }
+
+    return simplified
+  }
+
   function handleOpenWithdraw() {
     setWithdrawError(null)
     setShowWithdrawModal(true)
@@ -790,8 +877,10 @@ function PoolOverviewSection() {
       setUserInPosition(totalInPosition)
       setShowWithdrawModal(false)
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to withdraw capital."
+      const message = simplifyTransactionError(
+        error,
+        "Failed to withdraw capital."
+      )
       setWithdrawError(message)
     } finally {
       setIsWithdrawing(false)
@@ -866,8 +955,10 @@ function PoolOverviewSection() {
       setUserInPosition(totalInPosition)
       setShowDepositModal(false)
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to add capital."
+      const message = simplifyTransactionError(
+        error,
+        "Failed to add capital."
+      )
       setDepositError(message)
     } finally {
       setIsDepositing(false)
