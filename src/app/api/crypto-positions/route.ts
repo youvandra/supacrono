@@ -132,6 +132,7 @@ function extractActivePosition(result: PositionsResult | undefined) {
 
   const quantity = parseNumber(first.quantity)
   const cost = parseNumber(first.cost)
+  const openCost = parseNumber(first.open_pos_cost)
   const pnl = parseNumber(first.open_position_pnl)
   const type =
     typeof first.type === "string" ? (first.type as string) : null
@@ -157,8 +158,8 @@ function extractActivePosition(result: PositionsResult | undefined) {
   const entryPrice =
     quantity !== null &&
     quantity !== 0 &&
-    cost !== null
-      ? Math.abs(cost / quantity)
+    openCost !== null
+      ? Math.abs(openCost / quantity)
       : null
 
   return {

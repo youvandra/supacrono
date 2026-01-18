@@ -117,6 +117,9 @@ function simplifyTransactionError(error: unknown, fallback: string): string {
 
 export function PoolOverviewSection() {
   const [totalPoolValue, setTotalPoolValue] = useState<string | null>(null)
+  const [totalPoolValueUsd, setTotalPoolValueUsd] = useState<number | null>(
+    null
+  )
   const [isLoadingTotalPoolValue, setIsLoadingTotalPoolValue] = useState(false)
   const [positionNotional, setPositionNotional] = useState<number | null>(null)
   const [positionPnl, setPositionPnl] = useState<number | null>(null)
@@ -173,6 +176,7 @@ export function PoolOverviewSection() {
         }
 
         if (typeof data.totalUsdValue === "number") {
+          setTotalPoolValueUsd(data.totalUsdValue)
           const formatted = data.totalUsdValue.toLocaleString("en-US", {
             style: "currency",
             currency: "USD",
@@ -180,10 +184,12 @@ export function PoolOverviewSection() {
           })
           setTotalPoolValue(formatted)
         } else {
+          setTotalPoolValueUsd(null)
           setTotalPoolValue(null)
         }
       } catch {
         if (!cancelled) {
+          setTotalPoolValueUsd(null)
           setTotalPoolValue(null)
         }
       } finally {
@@ -420,9 +426,14 @@ export function PoolOverviewSection() {
 
   const poolPnlPercent =
     positionPnl !== null &&
-    positionNotional !== null &&
-    positionNotional > 0
-      ? (positionPnl / positionNotional) * 100
+    totalPoolValueUsd !== null
+      ? (() => {
+          const startingValue = totalPoolValueUsd - positionPnl
+          if (!Number.isFinite(startingValue) || startingValue <= 0) {
+            return null
+          }
+          return (positionPnl / startingValue) * 100
+        })()
       : null
 
   const poolPnlPercentDisplay =
@@ -918,4 +929,3 @@ export function PoolOverviewSection() {
     </motion.section>
   )
 }
-

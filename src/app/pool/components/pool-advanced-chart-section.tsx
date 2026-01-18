@@ -161,7 +161,7 @@ export function PoolAdvancedChartSection() {
               ) : position ? (
                 <>
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
-                    Size{" "}
+                    Quantity{" "}
                     <span className="font-semibold">
                       {position.quantity !== null
                         ? `${position.quantity} CRO`
@@ -170,7 +170,7 @@ export function PoolAdvancedChartSection() {
                   </span>
                   {position.entryPrice !== null ? (
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
-                      Entry{" "}
+                      Avg. Entry Price{" "}
                       <span className="font-semibold">
                         {position.entryPrice.toFixed(6)}
                       </span>
