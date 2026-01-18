@@ -3,8 +3,15 @@
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowUpRight, PieChart, Wallet } from "lucide-react"
-import { Contract, JsonRpcProvider, formatUnits } from "ethers"
+import { ArrowDownLeft, ArrowUpRight, PieChart, Wallet } from "lucide-react"
+import {
+  BrowserProvider,
+  Contract,
+  JsonRpcProvider,
+  formatUnits,
+  parseUnits,
+  type Eip1193Provider,
+} from "ethers"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +26,7 @@ import {
   SUPA_CP_ABI,
   SUPA_CP_CONTRACT_ADDRESS,
 } from "@/lib/smart-contract/supa"
+import { WithdrawModal } from "@/components/withdraw-modal"
 
 type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
@@ -26,6 +34,90 @@ type EthereumProvider = {
 
 const CRONOS_CHAIN_ID_HEX = "0x152"
 const RPC_PROVIDER = new JsonRpcProvider("https://evm-t3.cronos.org")
+
+function simplifyTransactionError(error: unknown, fallback: string): string {
+  if (!error) {
+    return fallback
+  }
+
+  const anyError = error as {
+    message?: string
+    shortMessage?: string
+    reason?: string
+    error?: { message?: string }
+  }
+
+  let raw = ""
+
+  if (typeof anyError.shortMessage === "string") {
+    raw = anyError.shortMessage
+  } else if (typeof anyError.reason === "string") {
+    raw = anyError.reason
+  } else if (typeof anyError.message === "string") {
+    raw = anyError.message
+  } else if (anyError.error && typeof anyError.error.message === "string") {
+    raw = anyError.error.message
+  }
+
+  if (!raw) {
+    return fallback
+  }
+
+  let simplified = raw
+
+  const executionRevertedMatch = simplified.match(
+    /execution reverted(?::|: )?\s*(.+)$/i
+  )
+  if (executionRevertedMatch && executionRevertedMatch[1]) {
+    simplified = executionRevertedMatch[1]
+  }
+
+  const reasonMatch = simplified.match(/reason="([^"]+)"/)
+  if (reasonMatch && reasonMatch[1]) {
+    simplified = reasonMatch[1]
+  }
+
+  simplified = simplified.replace(/^Error:\s*/i, "")
+  simplified = simplified.replace(/^CALL_EXCEPTION.*?:\s*/i, "")
+  simplified = simplified.replace(/\s*\(see .*$/i, "")
+  simplified = simplified.replace(
+    /\s*\[ See: https:\/\/links\.ethers\.org\/[^\]]+\]$/i,
+    ""
+  )
+
+  simplified = simplified.trim()
+
+  if (!simplified) {
+    return fallback
+  }
+
+  const mappings: { match: RegExp; message: string }[] = [
+    {
+      match: /amount exceeds available capital/i,
+      message: "Amount exceeds your available capital",
+    },
+    {
+      match: /insufficient funds/i,
+      message: "Insufficient balance to cover this transaction",
+    },
+    {
+      match: /user rejected/i,
+      message: "Transaction was rejected in your wallet",
+    },
+  ]
+
+  for (const mapping of mappings) {
+    if (mapping.match.test(simplified)) {
+      return mapping.message
+    }
+  }
+
+  if (simplified.length > 160) {
+    return `${simplified.slice(0, 157).trimEnd()}...`
+  }
+
+  return simplified
+}
 
 async function connectWalletCronosEvm(): Promise<string | null> {
   if (typeof window === "undefined") {
@@ -301,6 +393,13 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
   const [isLoadingPool, setIsLoadingPool] = useState(false)
   const [userAvailable, setUserAvailable] = useState<number | null>(null)
   const [userInPosition, setUserInPosition] = useState<number | null>(null)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [withdrawRole, setWithdrawRole] = useState<"taker" | "absorber">(
+    "taker"
+  )
+  const [withdrawAmount, setWithdrawAmount] = useState("")
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const [withdrawError, setWithdrawError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -382,88 +481,209 @@ function PortfolioOverviewSection({ account }: { account: string | null }) {
         })} tCRO`
       : "0.00 tCRO"
 
+  function handleOpenWithdraw() {
+    if (!account) {
+      alert("Connect a wallet on Cronos EVM to withdraw.")
+      return
+    }
+    setWithdrawError(null)
+    setShowWithdrawModal(true)
+  }
+
+  async function handleConfirmWithdraw() {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const trimmedAmount = withdrawAmount.trim()
+    if (!trimmedAmount) {
+      setWithdrawError("Enter an amount")
+      return
+    }
+
+    try {
+      setWithdrawError(null)
+      setIsWithdrawing(true)
+
+      const provider = (window as { ethereum?: EthereumProvider }).ethereum
+      if (!provider) {
+        alert("MetaMask is not available in this browser.")
+        setIsWithdrawing(false)
+        return
+      }
+
+      const browserProvider = new BrowserProvider(
+        provider as unknown as Eip1193Provider
+      )
+      const signer = await browserProvider.getSigner()
+      const signerAddress = await signer.getAddress()
+
+      const contract = new Contract(
+        SUPA_CP_CONTRACT_ADDRESS,
+        SUPA_CP_ABI,
+        signer
+      )
+
+      const value = parseUnits(trimmedAmount, 18)
+      if (value <= BigInt(0)) {
+        setWithdrawError("Enter a positive amount")
+        setIsWithdrawing(false)
+        return
+      }
+
+      const role = withdrawRole === "taker" ? 1 : 0
+
+      const tx = await contract.withdraw(role, value)
+      await tx.wait()
+
+      const viewContract = new Contract(
+        SUPA_CP_CONTRACT_ADDRESS,
+        SUPA_CP_ABI,
+        RPC_PROVIDER
+      )
+      const updatedUser = await viewContract.users(signerAddress)
+
+      const updatedTakerAvailable = Number(
+        formatUnits(updatedUser.taker.available, 18)
+      )
+      const updatedTakerInPosition = Number(
+        formatUnits(updatedUser.taker.inPosition, 18)
+      )
+      const updatedAbsorberAvailable = Number(
+        formatUnits(updatedUser.absorber.available, 18)
+      )
+      const updatedAbsorberInPosition = Number(
+        formatUnits(updatedUser.absorber.inPosition, 18)
+      )
+
+      const totalAvailable =
+        updatedTakerAvailable + updatedAbsorberAvailable
+      const totalInPosition =
+        updatedTakerInPosition + updatedAbsorberInPosition
+
+      setUserAvailable(totalAvailable)
+      setUserInPosition(totalInPosition)
+      setShowWithdrawModal(false)
+    } catch (error) {
+      const message = simplifyTransactionError(
+        error,
+        "Failed to withdraw capital."
+      )
+      setWithdrawError(message)
+    } finally {
+      setIsWithdrawing(false)
+    }
+  }
+
   return (
-    <motion.section
-      className="flex flex-col gap-6 border-b border-slate-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between"
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-    >
-      <div className="max-w-xl">
-        <Badge className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800">
-          Your Supacron portfolio
-        </Badge>
-        <h1 className="mt-4 text-balance text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl">
-          One view of your Taker and Absorber capital.
-        </h1>
-        <p className="mt-4 text-balance text-sm leading-relaxed text-slate-600 sm:text-base">
-          This page aggregates how your wallets participate in the Supacron
-          pool, splitting positions between Takers and Absorbers, tracking
-          accrued yield, and summarizing risk against protocol limits.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3 text-xs">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-emerald-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span className="font-medium uppercase tracking-[0.18em]">
-              Demo only
+    <>
+      <WithdrawModal
+        open={showWithdrawModal}
+        role={withdrawRole}
+        amount={withdrawAmount}
+        error={withdrawError}
+        isSubmitting={isWithdrawing}
+        onClose={() => setShowWithdrawModal(false)}
+        onConfirm={handleConfirmWithdraw}
+        onRoleChange={setWithdrawRole}
+        onAmountChange={setWithdrawAmount}
+      />
+      <motion.section
+        className="flex flex-col gap-6 border-b border-slate-200/80 pb-10 sm:flex-row sm:items-end sm:justify-between"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        <div className="max-w-xl">
+          <Badge className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800">
+            Your Supacron portfolio
+          </Badge>
+          <h1 className="mt-4 text-balance text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl">
+            One view of your Taker and Absorber capital.
+          </h1>
+          <p className="mt-4 text-balance text-sm leading-relaxed text-slate-600 sm:text-base">
+            This page aggregates how your wallets participate in the Supacron
+            pool, splitting positions between Takers and Absorbers, tracking
+            accrued yield, and summarizing risk against protocol limits.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3 text-xs">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="font-medium uppercase tracking-[0.18em]">
+                Demo only
+              </span>
             </span>
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
-            <PieChart className="h-3 w-3" aria-hidden="true" />
-            <span>Illustrative balances and PnL for Cronos hackathon</span>
-          </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
+              <PieChart className="h-3 w-3" aria-hidden="true" />
+              <span>Illustrative balances and PnL for Cronos hackathon</span>
+            </span>
+          </div>
         </div>
-      </div>
-      <div className="grid w-full gap-3 text-xs text-slate-600 sm:w-80 sm:text-sm">
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            Total portfolio value
-          </p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">
-            {isLoadingPool ? (
-              <span className="inline-block h-5 w-28 animate-pulse rounded-full bg-slate-200" />
-            ) : (
-              totalCommittedDisplay
-            )}
-          </p>
-          <p className="text-[11px] text-emerald-600">+$8,420 (+7.3%)</p>
+        <div className="grid w-full gap-3 text-xs text-slate-600 sm:w-80 sm:text-sm">
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              Total portfolio value
+            </p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">
+              {isLoadingPool ? (
+                <span className="inline-block h-5 w-28 animate-pulse rounded-full bg-slate-200" />
+              ) : (
+                totalCommittedDisplay
+              )}
+            </p>
+            <p className="text-[11px] text-emerald-600">+$8,420 (+7.3%)</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              Available Capital
+            </p>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <p className="text-lg font-semibold text-slate-900">
+                {isLoadingPool ? (
+                  <span className="inline-block h-5 w-24 animate-pulse rounded-full bg-slate-200" />
+                ) : (
+                  withdrawableDisplay
+                )}
+              </p>
+              <Button
+                variant="outline"
+                className="inline-flex items-center rounded-full border-slate-200 bg-white px-3 py-1 text-[11px] font-medium hover:bg-slate-50"
+                onClick={handleOpenWithdraw}
+                disabled={isWithdrawing}
+              >
+                <ArrowDownLeft
+                  className="mr-1.5 h-3 w-3"
+                  aria-hidden="true"
+                />
+                Withdraw
+              </Button>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Available to withdraw from the pool.
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              Capital in position
+            </p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">
+              {isLoadingPool ? (
+                <span className="inline-block h-5 w-28 animate-pulse rounded-full bg-slate-200" />
+              ) : userInPosition !== null ? (
+                `${userInPosition.toLocaleString("en-US", {
+                  maximumFractionDigits: 4,
+                })} tCRO`
+              ) : (
+                "0.00 tCRO"
+              )}
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Currently committed to active Taker and Absorber positions.
+            </p>
+          </div>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            Available Capital
-          </p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">
-            {isLoadingPool ? (
-              <span className="inline-block h-5 w-24 animate-pulse rounded-full bg-slate-200" />
-            ) : (
-              withdrawableDisplay
-            )}
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Available to withdraw from the pool.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            Capital in position
-          </p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">
-            {isLoadingPool ? (
-              <span className="inline-block h-5 w-28 animate-pulse rounded-full bg-slate-200" />
-            ) : userInPosition !== null ? (
-              `${userInPosition.toLocaleString("en-US", {
-                maximumFractionDigits: 4,
-              })} tCRO`
-            ) : (
-              "0.00 tCRO"
-            )}
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Currently committed to active Taker and Absorber positions.
-          </p>
-        </div>
-      </div>
-    </motion.section>
+      </motion.section>
+    </>
   )
 }
 
