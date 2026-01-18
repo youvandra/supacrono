@@ -367,6 +367,13 @@ function PoolOverviewSection() {
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [depositRole, setDepositRole] = useState<"taker" | "absorber">("taker")
   const [depositAmount, setDepositAmount] = useState("1")
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const [withdrawError, setWithdrawError] = useState<string | null>(null)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [withdrawRole, setWithdrawRole] = useState<"taker" | "absorber">(
+    "taker"
+  )
+  const [withdrawAmount, setWithdrawAmount] = useState("")
 
   useEffect(() => {
     let cancelled = false
@@ -709,6 +716,88 @@ function PoolOverviewSection() {
         })} tCRO`
       : "0.00 tCRO"
 
+  function handleOpenWithdraw() {
+    setWithdrawError(null)
+    setShowWithdrawModal(true)
+  }
+
+  async function handleConfirmWithdraw() {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const trimmedAmount = withdrawAmount.trim()
+    if (!trimmedAmount) {
+      setWithdrawError("Enter an amount")
+      return
+    }
+
+    try {
+      setWithdrawError(null)
+      setIsWithdrawing(true)
+
+      const provider = (window as { ethereum?: EthereumProvider }).ethereum
+      if (!provider) {
+        alert("MetaMask is not available in this browser.")
+        setIsWithdrawing(false)
+        return
+      }
+
+      const browserProvider = new BrowserProvider(
+        provider as unknown as Eip1193Provider
+      )
+      const signer = await browserProvider.getSigner()
+      const signerAddress = await signer.getAddress()
+
+      const contract = new Contract(
+        SUPA_CP_CONTRACT_ADDRESS,
+        SUPA_CP_ABI,
+        signer
+      )
+
+      const value = parseUnits(trimmedAmount, 18)
+      if (value <= BigInt(0)) {
+        setWithdrawError("Enter a positive amount")
+        setIsWithdrawing(false)
+        return
+      }
+
+      const role = withdrawRole === "taker" ? 1 : 0
+
+      const tx = await contract.withdraw(role, value)
+      await tx.wait()
+
+      const updatedUser = await contract.users(signerAddress)
+      const updatedTakerAvailable = Number(
+        formatUnits(updatedUser.taker.available, 18)
+      )
+      const updatedTakerInPosition = Number(
+        formatUnits(updatedUser.taker.inPosition, 18)
+      )
+      const updatedAbsorberAvailable = Number(
+        formatUnits(updatedUser.absorber.available, 18)
+      )
+      const updatedAbsorberInPosition = Number(
+        formatUnits(updatedUser.absorber.inPosition, 18)
+      )
+
+      const totalAvailable =
+        updatedTakerAvailable + updatedAbsorberAvailable
+      const totalInPosition =
+        updatedTakerInPosition + updatedAbsorberInPosition
+
+      setUserAvailable(totalAvailable)
+      setUserInPosition(totalInPosition)
+      setShowWithdrawModal(false)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to withdraw capital."
+      setWithdrawError(message)
+    } finally {
+      setIsWithdrawing(false)
+    }
+  }
+
   function handleAddCapital() {
     setDepositError(null)
     setShowDepositModal(true)
@@ -865,6 +954,81 @@ function PoolOverviewSection() {
           </div>
         </div>
       ) : null}
+      {showWithdrawModal ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl sm:p-5">
+            <h2 className="text-sm font-semibold text-slate-900">
+              Withdraw from SupaCapitalPool
+            </h2>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Choose role and amount of tCRO to withdraw on-chain.
+            </p>
+            <div className="mt-4 flex gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setWithdrawRole("taker")}
+                className={`flex-1 rounded-full border px-3 py-2 font-medium ${
+                  withdrawRole === "taker"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
+                }`}
+              >
+                Taker
+              </button>
+              <button
+                type="button"
+                onClick={() => setWithdrawRole("absorber")}
+                className={`flex-1 rounded-full border px-3 py-2 font-medium ${
+                  withdrawRole === "absorber"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
+                }`}
+              >
+                Absorber
+              </button>
+            </div>
+            <div className="mt-4 space-y-1 text-[11px]">
+              <label className="block text-slate-500">Amount (tCRO)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.0001"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-slate-200"
+              />
+            </div>
+            {withdrawError ? (
+              <p className="mt-2 text-[11px] text-rose-600">
+                {withdrawError}
+              </p>
+            ) : null}
+            <div className="mt-4 flex justify-end gap-2 text-[11px]">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full px-3"
+                onClick={() => {
+                  if (!isWithdrawing) {
+                    setShowWithdrawModal(false)
+                  }
+                }}
+                disabled={isWithdrawing}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="rounded-full px-4"
+                onClick={handleConfirmWithdraw}
+                disabled={isWithdrawing}
+              >
+                {isWithdrawing ? "Confirming..." : "Confirm withdraw"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:justify-between">
         <div className="w-full sm:w-1/2 max-w-xl">
           <Badge className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-800">
@@ -919,14 +1083,18 @@ function PoolOverviewSection() {
               <Button
                 variant="outline"
                 className="w-full rounded-full border-slate-200 bg-white px-4 text-[11px] font-medium hover:bg-slate-50"
+                onClick={handleOpenWithdraw}
+                disabled={isWithdrawing}
               >
                 <ArrowDownLeft className="mr-1.5 h-3 w-3" aria-hidden="true" />
                 Withdraw
               </Button>
             </div>
           </div>
-          {depositError ? (
-            <p className="text-[10px] text-rose-600">{depositError}</p>
+          {withdrawError || depositError ? (
+            <p className="text-[10px] text-rose-600">
+              {withdrawError || depositError}
+            </p>
           ) : null}
           <p className="text-[10px] text-slate-400">
             In this prototype, these actions are illustrative only.

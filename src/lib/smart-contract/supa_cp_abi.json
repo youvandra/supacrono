@@ -26,40 +26,14 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"internalType": "enum SupaCapitalPool.Role",
-				"name": "role",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "lockCapital",
+		"inputs": [],
+		"name": "lockGlobal",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"internalType": "enum SupaCapitalPool.Role",
-				"name": "role",
-				"type": "uint8"
-			},
 			{
 				"internalType": "uint256",
 				"name": "amount",
@@ -72,18 +46,7 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"internalType": "enum SupaCapitalPool.Role",
-				"name": "role",
-				"type": "uint8"
-			}
-		],
+		"inputs": [],
 		"name": "reportProfit",
 		"outputs": [],
 		"stateMutability": "payable",
@@ -94,24 +57,8 @@
 		"type": "receive"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"internalType": "enum SupaCapitalPool.Role",
-				"name": "role",
-				"type": "uint8"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "unlockCapital",
+		"inputs": [],
+		"name": "unlockGlobal",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -199,6 +146,25 @@
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "userList",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
 			}
 		],
 		"stateMutability": "view",
