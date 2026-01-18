@@ -1147,13 +1147,18 @@ function PoolAdvancedChartSection() {
                 <>
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
                     Size{" "}
-                    {position.quantity !== null
-                      ? position.quantity
-                      : "0"}
+                    <span className="font-semibold">
+                      {position.quantity !== null
+                        ? `${position.quantity} CRO`
+                        : "0 CRO"}
+                    </span>
                   </span>
                   {position.entryPrice !== null ? (
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700">
-                      Entry {position.entryPrice.toFixed(6)}
+                      Entry{" "}
+                      <span className="font-semibold">
+                        {position.entryPrice.toFixed(6)}
+                      </span>
                     </span>
                   ) : null}
                 </>
