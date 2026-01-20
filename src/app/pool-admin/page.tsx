@@ -8,7 +8,7 @@ import {
   parseUnits,
   type Eip1193Provider,
 } from "ethers"
-import { Loader2 } from "lucide-react"
+import { Loader2, Bot } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -52,6 +52,10 @@ export default function PoolAdminPage() {
   const [newOperator, setNewOperator] = useState("")
   const [lossAmount, setLossAmount] = useState("")
   const [profitAmount, setProfitAmount] = useState("")
+
+  // AI Agent State
+  const [isAgentLoading, setIsAgentLoading] = useState(false)
+  const [agentStatus, setAgentStatus] = useState<string | null>(null)
 
   useEffect(() => {
     getConnectedAccount().then(setAccount)
@@ -101,8 +105,10 @@ export default function PoolAdminPage() {
   }
 
   const getSigner = async () => {
-    if (!window.ethereum) throw new Error("No crypto wallet found")
-    const provider = new BrowserProvider(window.ethereum as Eip1193Provider)
+    if (typeof window === "undefined" || !(window as any).ethereum) {
+      throw new Error("No crypto wallet found")
+    }
+    const provider = new BrowserProvider((window as any).ethereum)
     return await provider.getSigner()
   }
 
@@ -167,6 +173,38 @@ export default function PoolAdminPage() {
     )
   }
 
+  const handleCalculateAgent = async () => {
+    setIsAgentLoading(true)
+    setAgentStatus(null)
+    try {
+      const response = await fetch("/api/agent/calculate-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          totalAvailable,
+          totalInPosition,
+          profitPool,
+          lossPool,
+          absorberYieldBps,
+          operator
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || `Server error: ${response.statusText}`)
+      }
+
+      setAgentStatus("AI Agent successfully updated trading status!")
+    } catch (error: unknown) {
+      console.error(error)
+      const message = error instanceof Error ? error.message : "Agent calculation failed"
+      setAgentStatus(`Error: ${message}`)
+    } finally {
+      setIsAgentLoading(false)
+    }
+  }
+
   const isOperator =
     account && operator && account.toLowerCase() === operator.toLowerCase()
 
@@ -204,6 +242,42 @@ export default function PoolAdminPage() {
                 Operator ({operator}). Write transactions will likely fail.
               </div>
             )}
+
+            {/* AI Agent Interface */}
+            <Card className="border-purple-200 bg-purple-50/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-base font-medium text-purple-900">
+                    AI Trading Agent
+                  </CardTitle>
+                  <CardDescription className="text-purple-700">
+                    Autonomous pool monitoring and optimization system
+                  </CardDescription>
+                </div>
+                <Bot className="h-6 w-6 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-purple-900">
+                      {agentStatus || "Ready to analyze pool status and suggest actions."}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleCalculateAgent} 
+                    disabled={isAgentLoading}
+                    className="bg-purple-600 text-white hover:bg-purple-700"
+                  >
+                    {isAgentLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Bot className="mr-2 h-4 w-4" />
+                    )}
+                    Analyze
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Status Overview */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

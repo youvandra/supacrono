@@ -13,8 +13,8 @@ type AITradingStatus = {
   position_size_desc: string
   risk_budget: string
   risk_budget_desc: string
-  last_action: string
-  last_action_desc: string
+  leverage: string
+  leverage_desc: string
   reasoning: string
 }
 
@@ -60,8 +60,8 @@ export function AITradingStatusSection() {
     risk_budget: "58% of daily",
     risk_budget_desc:
       "AI can still deploy additional risk before today's cap is hit.",
-    last_action: "Reduced exposure · 6 min ago",
-    last_action_desc: "AI trimmed long size after volatility spike on CRO/USD.",
+    leverage: "2.1x",
+    leverage_desc: "Expressed through CRO perpetuals on Crypto.com Futures.",
     reasoning:
       "The engine scores short-term CRO trend, volatility, and funding conditions, then picks a bias and size under the pool's risk budget.\n\nRight now it is net long with moderated size after a volatility uptick, keeping Absorber buffer within the configured drawdown envelope.",
   }
@@ -125,41 +125,56 @@ export function AITradingStatusSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 pt-4 text-sm text-slate-600 sm:grid-cols-2">
+          {/* Current Bias */}
           <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Current bias
-            </p>
-            <p className="text-sm font-semibold text-slate-900">
+            <div className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Current Bias
+            </div>
+            <div className="font-medium text-slate-900">
               {displayStatus.current_bias}
-            </p>
-            <p className="text-xs">{displayStatus.current_bias_desc}</p>
+            </div>
+            <div className="text-xs text-slate-500">
+              {displayStatus.current_bias_desc}
+            </div>
           </div>
+
+          {/* Position Size */}
           <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Position size
-            </p>
-            <p className="text-sm font-semibold text-slate-900">
+            <div className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Position Size
+            </div>
+            <div className="font-medium text-slate-900">
               {displayStatus.position_size}
-            </p>
-            <p className="text-xs">{displayStatus.position_size_desc}</p>
+            </div>
+            <div className="text-xs text-slate-500">
+              {displayStatus.position_size_desc}
+            </div>
           </div>
+
+          {/* Leverage */}
           <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Risk budget remaining
-            </p>
-            <p className="text-sm font-semibold text-emerald-700">
+            <div className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Leverage
+            </div>
+            <div className="font-medium text-slate-900">
+              {displayStatus.leverage}
+            </div>
+            <div className="text-xs text-slate-500">
+              {displayStatus.leverage_desc}
+            </div>
+          </div>
+
+          {/* Risk Budget */}
+          <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
+            <div className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              Risk Budget
+            </div>
+            <div className="font-medium text-slate-900">
               {displayStatus.risk_budget}
-            </p>
-            <p className="text-xs">{displayStatus.risk_budget_desc}</p>
-          </div>
-          <div className="space-y-1 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Last action
-            </p>
-            <p className="text-sm font-semibold text-slate-900">
-              {displayStatus.last_action}
-            </p>
-            <p className="text-xs">{displayStatus.last_action_desc}</p>
+            </div>
+            <div className="text-xs text-slate-500">
+              {displayStatus.risk_budget_desc}
+            </div>
           </div>
         </CardContent>
       </Card>
