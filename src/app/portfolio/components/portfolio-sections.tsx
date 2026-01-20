@@ -360,7 +360,6 @@ export function PortfolioOverviewSection({
                 totalCommittedDisplay
               )}
             </p>
-            <p className="text-[11px] text-emerald-600">+$8,420 (+7.3%)</p>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -384,9 +383,6 @@ export function PortfolioOverviewSection({
                 Withdraw
               </Button>
             </div>
-            <p className="text-[11px] text-slate-500">
-              Available to withdraw from the pool.
-            </p>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -402,9 +398,6 @@ export function PortfolioOverviewSection({
               ) : (
                 "0.00 tCRO"
               )}
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Currently committed to active Taker and Absorber positions.
             </p>
           </div>
         </div>
