@@ -1,13 +1,19 @@
 "use client"
 
+import Image from "next/image"
+
 export function FooterSection() {
   return (
     <footer className="border-t border-slate-200 bg-white/70">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-            S
-          </div>
+          <Image
+            src="/supacron.png"
+            alt="Supacron Logo"
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-full"
+          />
           <span className="text-sm font-semibold text-slate-900">
             Supacron
           </span>

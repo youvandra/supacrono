@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { Wallet } from "lucide-react"
 
@@ -45,9 +46,13 @@ export function SiteHeader() {
           href="/"
           className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white shadow-sm">
-            S
-          </div>
+          <Image
+            src="/supacron.png"
+            alt="Supacron Logo"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full shadow-sm"
+          />
           <span className="text-base font-semibold tracking-tight text-slate-900">
             Supacron
           </span>

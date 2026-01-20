@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight, Wallet } from "lucide-react"
@@ -290,9 +291,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-20 border-b border-slate-200/60 bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white shadow-sm">
-            S
-          </div>
+          <Image
+            src="/supacron.png"
+            alt="Supacron Logo"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full shadow-sm"
+          />
           <span className="text-base font-semibold tracking-tight text-slate-900">
             Supacron
           </span>
@@ -735,9 +740,13 @@ export function FooterSection() {
     <footer className="border-t border-slate-200 bg-white/70">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-            S
-          </div>
+          <Image
+            src="/supacron.png"
+            alt="Supacron Logo"
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-full"
+          />
           <span className="text-sm font-semibold text-slate-900">
             Supacron
           </span>
