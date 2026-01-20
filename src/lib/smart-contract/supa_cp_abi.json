@@ -3,7 +3,7 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "newOperator",
+				"name": "newOp",
 				"type": "address"
 			}
 		],
@@ -15,7 +15,7 @@
 	{
 		"inputs": [
 			{
-				"internalType": "enum SupaCapitalPool.Role",
+				"internalType": "enum Supacron.Role",
 				"name": "role",
 				"type": "uint8"
 			}
@@ -66,7 +66,7 @@
 	{
 		"inputs": [
 			{
-				"internalType": "enum SupaCapitalPool.Role",
+				"internalType": "enum Supacron.Role",
 				"name": "role",
 				"type": "uint8"
 			},
@@ -88,12 +88,90 @@
 	},
 	{
 		"inputs": [],
+		"name": "ABSORBER_YIELD_BPS",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "absorberSnapshot",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "BPS_DENOM",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "lossPool",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "operator",
 		"outputs": [
 			{
 				"internalType": "address",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "profitPool",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "takerSnapshot",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -193,7 +271,7 @@
 						"type": "uint256"
 					}
 				],
-				"internalType": "struct SupaCapitalPool.CapitalBucket",
+				"internalType": "struct Supacron.CapitalBucket",
 				"name": "taker",
 				"type": "tuple"
 			},
@@ -210,7 +288,7 @@
 						"type": "uint256"
 					}
 				],
-				"internalType": "struct SupaCapitalPool.CapitalBucket",
+				"internalType": "struct Supacron.CapitalBucket",
 				"name": "absorber",
 				"type": "tuple"
 			}

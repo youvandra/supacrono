@@ -656,7 +656,7 @@ export function PoolOverviewSection() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl sm:p-5">
             <h2 className="text-sm font-semibold text-slate-900">
-              Add capital to SupaCapitalPool
+              Add capital to Supacron
             </h2>
             <p className="mt-1 text-[11px] text-slate-500">
               Choose role and amount of tCRO to commit on-chain.
@@ -871,7 +871,7 @@ export function PoolOverviewSection() {
 
           <div className="mt-5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 text-xs text-slate-600 sm:text-sm">
             <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              On-chain capital (SupaCapitalPool)
+              On-chain capital (Supacron)
             </p>
             <div className="mt-2 grid gap-3 md:grid-cols-4">
               <div>
