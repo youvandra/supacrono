@@ -670,43 +670,24 @@ export function ActivitySection() {
             Recent portfolio activity
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4 text-xs text-slate-600">
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Deposited to Taker role
-                </p>
-                <p>Added $15,000 to Taker pool at current share price.</p>
-              </div>
-              <p className="whitespace-nowrap text-slate-500">3 hours ago</p>
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Yield paid to Absorber
-                </p>
-                <p>Epoch yield of $420 realized to Absorber wallet.</p>
-              </div>
-              <p className="whitespace-nowrap text-slate-500">1 day ago</p>
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Rebalanced between roles
-                </p>
-                <p>Shifted $5,000 from Taker to Absorber allocation.</p>
-              </div>
-              <p className="whitespace-nowrap text-slate-500">4 days ago</p>
-            </div>
-          </div>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center text-xs text-slate-600">
+          <Badge
+            variant="outline"
+            className="mb-3 rounded-full border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500"
+          >
+            Coming Soon
+          </Badge>
+          <p className="max-w-xs text-balance">
+            Detailed transaction history and yield logs will be available here.
+          </p>
         </CardContent>
         <CardFooter className="flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
-          <p>This activity log is illustrative for the Cronos hackathon demo.</p>
+          <p>This activity log is currently under development.</p>
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
+            disabled
+            className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium opacity-50"
           >
             Export history
           </Button>

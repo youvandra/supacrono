@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export function ActivityAndRiskSection() {
@@ -28,38 +29,16 @@ export function ActivityAndRiskSection() {
             Recent pool activity
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-4 text-xs text-slate-600">
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Trade executed · Long CRO
-                </p>
-                <p>Increased exposure by 12% of pool at 2.1x leverage.</p>
-              </div>
-              <p className="whitespace-nowrap text-slate-500">3 min ago</p>
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-900">
-                  AI mode change · Normal → Conservative
-                </p>
-                <p>Reduced risk budget after hitting soft drawdown threshold.</p>
-              </div>
-              <p className="whitespace-nowrap text-slate-500">28 min ago</p>
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Profit settlement
-                </p>
-                <p>
-                  Absorber yield and protocol fee paid; surplus routed to Takers.
-                </p>
-              </div>
-              <p className="whitespace-nowrap text-slate-500">2 hours ago</p>
-            </div>
-          </div>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center text-xs text-slate-600">
+          <Badge
+            variant="outline"
+            className="mb-3 rounded-full border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500"
+          >
+            Coming Soon
+          </Badge>
+          <p className="max-w-xs text-balance">
+            Real-time trade execution and pool settlement logs will be displayed here.
+          </p>
         </CardContent>
       </Card>
 
