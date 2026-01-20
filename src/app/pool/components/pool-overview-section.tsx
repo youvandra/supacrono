@@ -667,8 +667,8 @@ export function PoolOverviewSection() {
                 onClick={() => setDepositRole("taker")}
                 className={`flex-1 rounded-full border px-3 py-2 font-medium ${
                   depositRole === "taker"
-                    ? "border-slate-900 bg-slate-900 text:white"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg:white"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
                 }`}
               >
                 Taker
@@ -678,8 +678,8 @@ export function PoolOverviewSection() {
                 onClick={() => setDepositRole("absorber")}
                 className={`flex-1 rounded-full border px-3 py-2 font-medium ${
                   depositRole === "absorber"
-                    ? "border-slate-900 bg-slate-900 text:white"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg:white"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
                 }`}
               >
                 Absorber
@@ -760,7 +760,7 @@ export function PoolOverviewSection() {
           <div className="mt-1 flex items-stretch justify-between gap-3">
             <div className="flex-1 flex flex-col justify-between">
               <div className="grid h-full gap-2 sm:grid-cols-2">
-                <div className="rounded-lg border border-slate-200 bg:white px-3 py-2">
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                     Available capital
                   </p>
@@ -772,7 +772,7 @@ export function PoolOverviewSection() {
                     )}
                   </p>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg:white px-3 py-2">
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                     Capital in position
                   </p>
@@ -823,7 +823,7 @@ export function PoolOverviewSection() {
         </div>
       </div>
 
-      <Card className="border-slate-200 bg:white/95 shadow-sm shadow-slate-900/5">
+      <Card className="border-slate-200 bg-white/95 shadow-sm shadow-slate-900/5">
         <CardHeader className="border-b border-slate-100 pb-3">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-sm font-semibold text-slate-900">
