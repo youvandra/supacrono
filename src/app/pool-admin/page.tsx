@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/components/ui/toast"
 
 import {
   SUPA_CP_ABI,
@@ -36,6 +37,7 @@ import { SiteHeader } from "../pool/components/site-header"
 import { FooterSection } from "../pool/components/footer-section"
 
 export default function PoolAdminPage() {
+  const { toast } = useToast()
   const [account, setAccount] = useState<string | null>(null)
   const [operator, setOperator] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -44,8 +46,7 @@ export default function PoolAdminPage() {
   // Contract State
   const [totalAvailable, setTotalAvailable] = useState<string>("0")
   const [totalInPosition, setTotalInPosition] = useState<string>("0")
-  const [profitPool, setProfitPool] = useState<string>("0")
-  const [lossPool, setLossPool] = useState<string>("0")
+  const [operatorBalance, setOperatorBalance] = useState<string>("0")
   const [absorberYieldBps, setAbsorberYieldBps] = useState<string>("0")
   
   // New Contract State Fields
@@ -58,7 +59,7 @@ export default function PoolAdminPage() {
   const [newOperator, setNewOperator] = useState("")
   const [lossAmount, setLossAmount] = useState("")
   const [profitAmount, setProfitAmount] = useState("")
-  const [withdrawLossAmount, setWithdrawLossAmount] = useState("")
+  const [withdrawOperatorAmount, setWithdrawOperatorAmount] = useState("")
 
   // AI Agent State
   const [isAgentLoading, setIsAgentLoading] = useState(false)
@@ -82,23 +83,20 @@ export default function PoolAdminPage() {
         _operator,
         _totalAvailable,
         _totalInPosition,
-        _profitPool,
-        _lossPool,
+        _operatorBalance,
         _absorberYieldBps,
       ] = await Promise.all([
         contract.operator().catch(() => "0x000..."),
         contract.totalAvailable().catch(() => BigInt(0)),
         contract.totalInPosition().catch(() => BigInt(0)),
-        contract.profitPool().catch(() => BigInt(0)),
-        contract.lossPool().catch(() => BigInt(0)),
+        contract.operatorBalance().catch(() => BigInt(0)),
         contract.ABSORBER_YIELD_BPS().catch(() => BigInt(0)),
       ])
 
       setOperator(_operator)
       setTotalAvailable(formatUnits(_totalAvailable, 18))
       setTotalInPosition(formatUnits(_totalInPosition, 18))
-      setProfitPool(formatUnits(_profitPool, 18))
-      setLossPool(formatUnits(_lossPool, 18))
+      setOperatorBalance(formatUnits(_operatorBalance, 18))
       setAbsorberYieldBps(_absorberYieldBps.toString())
 
       // Fetch new fields separately to prevent crashing if they don't exist yet
@@ -162,14 +160,17 @@ export default function PoolAdminPage() {
         wait: () => Promise<unknown>
       }
       setStatusMessage(`${actionName} transaction submitted: ${tx.hash}`)
+      toast(`${actionName} transaction submitted`, "info")
       await tx.wait()
       setStatusMessage(`${actionName} confirmed!`)
+      toast(`${actionName} confirmed!`, "success")
       fetchContractData()
     } catch (error: unknown) {
       console.error(error)
       const message =
         error instanceof Error ? error.message : "Transaction failed"
       setStatusMessage(`Error: ${message}`)
+      toast(`Error: ${message}`, "error")
     } finally {
       setIsLoading(false)
     }
@@ -204,10 +205,10 @@ export default function PoolAdminPage() {
     )
   }
 
-  const handleWithdrawLoss = () => {
-    if (!withdrawLossAmount) return
-    executeTransaction("Withdraw Loss", (contract) =>
-      contract.withdrawLoss(parseUnits(withdrawLossAmount, 18))
+  const handleWithdrawOperator = () => {
+    if (!withdrawOperatorAmount) return
+    executeTransaction("Withdraw Operator", (contract) =>
+      contract.withdrawOperator(parseUnits(withdrawOperatorAmount, 18))
     )
   }
 
@@ -221,8 +222,7 @@ export default function PoolAdminPage() {
         body: JSON.stringify({
           totalAvailable,
           totalInPosition,
-          profitPool,
-          lossPool,
+          operatorBalance,
           absorberYieldBps,
           operator
         }),
@@ -234,10 +234,12 @@ export default function PoolAdminPage() {
       }
 
       setAgentStatus("AI Agent successfully updated trading status!")
+      toast("AI Agent successfully updated trading status!", "success")
     } catch (error: unknown) {
       console.error(error)
       const message = error instanceof Error ? error.message : "Agent calculation failed"
       setAgentStatus(`Error: ${message}`)
+      toast(`Error: ${message}`, "error")
     } finally {
       setIsAgentLoading(false)
     }
@@ -356,22 +358,11 @@ export default function PoolAdminPage() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-slate-500">
-                    Profit Pool
+                    Operator Balance
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{profitPool}</div>
-                  <p className="text-xs text-slate-500">tCRO</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-slate-500">
-                    Loss Pool
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{lossPool}</div>
+                  <div className="text-2xl font-bold">{operatorBalance}</div>
                   <p className="text-xs text-slate-500">tCRO</p>
                 </CardContent>
               </Card>
@@ -513,16 +504,16 @@ export default function PoolAdminPage() {
 
                       <div className="grid gap-4 rounded-lg border border-slate-200 p-4">
                         <div className="space-y-2">
-                          <Label>Withdraw Loss</Label>
+                          <Label>Withdraw Operator</Label>
                           <div className="flex gap-2">
                             <Input
                               placeholder="Amount in tCRO"
-                              value={withdrawLossAmount}
-                              onChange={(e) => setWithdrawLossAmount(e.target.value)}
+                              value={withdrawOperatorAmount}
+                              onChange={(e) => setWithdrawOperatorAmount(e.target.value)}
                             />
                             <Button 
-                              onClick={handleWithdrawLoss} 
-                              disabled={isLoading || !withdrawLossAmount}
+                              onClick={handleWithdrawOperator} 
+                              disabled={isLoading || !withdrawOperatorAmount}
                               variant="destructive"
                               className="w-32"
                             >
@@ -530,7 +521,7 @@ export default function PoolAdminPage() {
                             </Button>
                           </div>
                           <p className="text-xs text-slate-500">
-                            Withdraws funds from the Loss Pool.
+                            Withdraws funds from the Operator Balance.
                           </p>
                         </div>
                       </div>

@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useToast } from "@/components/ui/toast"
 import { WithdrawModal } from "@/components/withdraw-modal"
 
 import {
@@ -116,6 +117,7 @@ function simplifyTransactionError(error: unknown, fallback: string): string {
 }
 
 export function PoolOverviewSection() {
+  const { toast } = useToast()
   const [totalPoolValue, setTotalPoolValue] = useState<string | null>(null)
   const [totalPoolValueUsd, setTotalPoolValueUsd] = useState<number | null>(
     null
@@ -539,7 +541,9 @@ export function PoolOverviewSection() {
       const role = withdrawRole === "taker" ? 1 : 0
 
       const tx = await contract.withdraw(role, value)
+      toast("Withdraw transaction submitted", "info")
       await tx.wait()
+      toast("Withdrawal confirmed!", "success")
 
       const updatedUser = await contract.users(signerAddress)
       const updatedTakerAvailable = Number(
@@ -617,7 +621,9 @@ export function PoolOverviewSection() {
       const role = depositRole === "taker" ? 1 : 0
 
       const tx = await contract.deposit(role, { value })
+      toast("Deposit transaction submitted", "info")
       await tx.wait()
+      toast("Capital added successfully!", "success")
 
       setAccount(signerAddress)
 
@@ -640,6 +646,7 @@ export function PoolOverviewSection() {
     } catch (error) {
       const message = simplifyTransactionError(error, "Failed to add capital.")
       setDepositError(message)
+      toast(`Error: ${message}`, "error")
     } finally {
       setIsDepositing(false)
     }

@@ -42,6 +42,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { ToastProvider } from "@/components/ui/toast"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -52,7 +54,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )
