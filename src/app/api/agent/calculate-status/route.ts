@@ -86,26 +86,39 @@ export async function POST(req: Request) {
 
     const result = JSON.parse(content)
 
+    // Validate and provide defaults to prevent DB errors
+    const safeResult = {
+      current_bias: result.current_bias || "Neutral",
+      current_bias_desc: result.current_bias_desc || "Market direction unclear",
+      position_size: result.position_size || "Small",
+      position_size_desc: result.position_size_desc || "Waiting for better confirmation",
+      risk_budget: result.risk_budget || "Low",
+      risk_budget_desc: result.risk_budget_desc || "Capital preservation mode",
+      leverage: result.leverage || "1x",
+      leverage_desc: result.leverage_desc || "No leverage",
+      reasoning: result.reasoning || "AI agent could not determine a clear reasoning based on current data."
+    }
+
     // Insert into Supabase
     const { error } = await supabase
       .from('ai_trading_status')
       .insert([
         {
-          current_bias: result.current_bias,
-          current_bias_desc: result.current_bias_desc,
-          position_size: result.position_size,
-          position_size_desc: result.position_size_desc,
-          risk_budget: result.risk_budget,
-          risk_budget_desc: result.risk_budget_desc,
-          leverage: result.leverage,
-          leverage_desc: result.leverage_desc,
-          reasoning: result.reasoning
+          current_bias: safeResult.current_bias,
+          current_bias_desc: safeResult.current_bias_desc,
+          position_size: safeResult.position_size,
+          position_size_desc: safeResult.position_size_desc,
+          risk_budget: safeResult.risk_budget,
+          risk_budget_desc: safeResult.risk_budget_desc,
+          leverage: safeResult.leverage,
+          leverage_desc: safeResult.leverage_desc,
+          reasoning: safeResult.reasoning
         }
       ])
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, data: result })
+    return NextResponse.json({ success: true, data: safeResult })
   } catch (error: unknown) {
     console.error('Agent calculation failed:', error)
     

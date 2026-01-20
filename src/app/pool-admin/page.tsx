@@ -48,10 +48,17 @@ export default function PoolAdminPage() {
   const [lossPool, setLossPool] = useState<string>("0")
   const [absorberYieldBps, setAbsorberYieldBps] = useState<string>("0")
   
+  // New Contract State Fields
+  const [totalTakerInPosition, setTotalTakerInPosition] = useState<string>("0")
+  const [totalAbsorberInPosition, setTotalAbsorberInPosition] = useState<string>("0")
+  const [takerSnapshot, setTakerSnapshot] = useState<string>("0")
+  const [absorberSnapshot, setAbsorberSnapshot] = useState<string>("0")
+
   // Form States
   const [newOperator, setNewOperator] = useState("")
   const [lossAmount, setLossAmount] = useState("")
   const [profitAmount, setProfitAmount] = useState("")
+  const [withdrawLossAmount, setWithdrawLossAmount] = useState("")
 
   // AI Agent State
   const [isAgentLoading, setIsAgentLoading] = useState(false)
@@ -70,6 +77,7 @@ export default function PoolAdminPage() {
         RPC_PROVIDER
       )
 
+      // Fetch basic data first
       const [
         _operator,
         _totalAvailable,
@@ -78,12 +86,12 @@ export default function PoolAdminPage() {
         _lossPool,
         _absorberYieldBps,
       ] = await Promise.all([
-        contract.operator(),
-        contract.totalAvailable(),
-        contract.totalInPosition(),
-        contract.profitPool(),
-        contract.lossPool(),
-        contract.ABSORBER_YIELD_BPS(),
+        contract.operator().catch(() => "0x000..."),
+        contract.totalAvailable().catch(() => BigInt(0)),
+        contract.totalInPosition().catch(() => BigInt(0)),
+        contract.profitPool().catch(() => BigInt(0)),
+        contract.lossPool().catch(() => BigInt(0)),
+        contract.ABSORBER_YIELD_BPS().catch(() => BigInt(0)),
       ])
 
       setOperator(_operator)
@@ -92,6 +100,29 @@ export default function PoolAdminPage() {
       setProfitPool(formatUnits(_profitPool, 18))
       setLossPool(formatUnits(_lossPool, 18))
       setAbsorberYieldBps(_absorberYieldBps.toString())
+
+      // Fetch new fields separately to prevent crashing if they don't exist yet
+      try {
+        const [
+          _totalTakerInPosition,
+          _totalAbsorberInPosition,
+          _takerSnapshot,
+          _absorberSnapshot,
+        ] = await Promise.all([
+          contract.totalTakerInPosition(),
+          contract.totalAbsorberInPosition(),
+          contract.takerSnapshot(),
+          contract.absorberSnapshot(),
+        ])
+
+        setTotalTakerInPosition(formatUnits(_totalTakerInPosition, 18))
+        setTotalAbsorberInPosition(formatUnits(_totalAbsorberInPosition, 18))
+        setTakerSnapshot(formatUnits(_takerSnapshot, 18))
+        setAbsorberSnapshot(formatUnits(_absorberSnapshot, 18))
+      } catch (err) {
+        console.warn("New contract fields not available:", err)
+      }
+
     } catch (error) {
       console.error("Failed to fetch contract data:", error)
     }
@@ -170,6 +201,13 @@ export default function PoolAdminPage() {
     if (!profitAmount) return
     executeTransaction("Report Profit", (contract) =>
       contract.reportProfit({ value: parseUnits(profitAmount, 18) })
+    )
+  }
+
+  const handleWithdrawLoss = () => {
+    if (!withdrawLossAmount) return
+    executeTransaction("Withdraw Loss", (contract) =>
+      contract.withdrawLoss(parseUnits(withdrawLossAmount, 18))
     )
   }
 
@@ -348,6 +386,30 @@ export default function PoolAdminPage() {
                   <p className="text-xs text-slate-500">BPS</p>
                 </CardContent>
               </Card>
+
+              {/* New Cards for Taker/Absorber Data */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500">
+                    Taker In Position
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalTakerInPosition}</div>
+                  <p className="text-xs text-slate-500">tCRO</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-500">
+                    Absorber In Position
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalAbsorberInPosition}</div>
+                  <p className="text-xs text-slate-500">tCRO</p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Admin Actions */}
@@ -447,6 +509,30 @@ export default function PoolAdminPage() {
                         >
                           Unlock
                         </Button>
+                      </div>
+
+                      <div className="grid gap-4 rounded-lg border border-slate-200 p-4">
+                        <div className="space-y-2">
+                          <Label>Withdraw Loss</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Amount in tCRO"
+                              value={withdrawLossAmount}
+                              onChange={(e) => setWithdrawLossAmount(e.target.value)}
+                            />
+                            <Button 
+                              onClick={handleWithdrawLoss} 
+                              disabled={isLoading || !withdrawLossAmount}
+                              variant="destructive"
+                              className="w-32"
+                            >
+                              {isLoading ? <Loader2 className="animate-spin" /> : "Withdraw"}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Withdraws funds from the Loss Pool.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
