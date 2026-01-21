@@ -8,7 +8,7 @@ import {
   parseUnits,
   type Eip1193Provider,
 } from "ethers"
-import { Loader2, Bot } from "lucide-react"
+import { Loader2, Bot, Brain, XCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -282,6 +282,39 @@ export default function PoolAdminPage() {
     }
   }
 
+  const handleClosePosition = async () => {
+    setIsAgentLoading(true)
+    setAgentStatus(null)
+    try {
+      setAgentStatus("Closing position and unlocking pool...")
+      const response = await fetch("/api/admin/close-position", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || `Server error: ${response.statusText}`)
+      }
+      
+      setAgentStatus(data.message || "Position closed and pool unlocked!")
+      toast(data.message || "Position closed!", "success")
+      
+      // Refresh contract data
+      fetchContractData()
+    } catch (error: unknown) {
+        console.error(error)
+        const message = error instanceof Error ? error.message : "Close action failed"
+        setAgentStatus(`Error: ${message}`)
+        toast(`Error: ${message}`, "error")
+    } finally {
+        setIsAgentLoading(false)
+    }
+  }
+
   const isOperator =
     account && operator && account.toLowerCase() === operator.toLowerCase()
 
@@ -350,7 +383,20 @@ export default function PoolAdminPage() {
                     ) : (
                       <Brain className="mr-2 h-4 w-4" />
                     )}
-                    Open AI
+                    Open
+                  </Button>
+                  <Button 
+                    onClick={handleClosePosition} 
+                    disabled={isAgentLoading || Number(totalInPosition) <= 0}
+                    variant="outline"
+                    className="border-purple-200 text-purple-700 hover:bg-purple-100"
+                  >
+                    {isAgentLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <XCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Close
                   </Button>
                 </div>
               </CardContent>
