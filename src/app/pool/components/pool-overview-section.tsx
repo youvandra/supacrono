@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowDownLeft, Plus } from "lucide-react"
+import { ArrowDownLeft, Plus, Wallet } from "lucide-react"
 import {
   BrowserProvider,
   Contract,
@@ -679,6 +679,28 @@ export function PoolOverviewSection({
     }
   }
 
+  async function handleConnectWallet() {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const provider = (window as { ethereum?: EthereumProvider }).ethereum
+    if (!provider) {
+      alert("MetaMask is not available in this browser.")
+      return
+    }
+
+    try {
+      await provider.request({
+        method: "eth_requestAccounts",
+      })
+      const addr = await getConnectedAccount()
+      setAccount(addr)
+    } catch (error) {
+      console.error("Failed to connect wallet:", error)
+    }
+  }
+
   return (
     <motion.section
       className="flex flex-col gap-6 border-b border-slate-200/80 pb-8"
@@ -783,78 +805,95 @@ export function PoolOverviewSection({
             and how profits and losses flow between Takers and Absorbers.
           </p>
         </div>
-        <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-600 sm:w-1/2 sm:text-sm">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-            Your position
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Connect a wallet on Cronos EVM to preview how your capital would sit
-            in the pool as a Taker or Absorber.
-          </p>
-          <div className="mt-1 flex items-stretch justify-between gap-3">
-            <div className="flex-1 flex flex-col justify-between">
-              <div className="grid h-full gap-2 sm:grid-cols-2">
-                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                    Available capital
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">
-                    {isLoadingUserPosition ? (
-                      <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
-                    ) : (
-                      userAvailableDisplay
-                    )}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                    Capital in position
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">
-                    {isLoadingUserPosition ? (
-                      <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
-                    ) : (
-                      userInPositionDisplay
-                    )}
-                  </p>
+        {account ? (
+          <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-600 sm:w-1/2 sm:text-sm">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+              Your position
+            </p>
+            <div className="mt-1 flex items-stretch justify-between gap-3">
+              <div className="flex-1 flex flex-col justify-between">
+                <div className="grid h-full gap-2 sm:grid-cols-2">
+                  <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                      Available capital
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                      {isLoadingUserPosition ? (
+                        <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
+                      ) : (
+                        userAvailableDisplay
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                      Capital in position
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                      {isLoadingUserPosition ? (
+                        <span className="inline-block h-4 w-24 animate-pulse rounded-full bg-slate-200" />
+                      ) : (
+                        userInPositionDisplay
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
+              <div className="flex w-32 flex-col items-end justify-between gap-2 sm:w-36">
+                <Button
+                  className="w-full rounded-full px-4 text-[11px] font-medium"
+                  onClick={handleAddCapital}
+                  disabled={isDepositing}
+                >
+                  {isDepositing ? (
+                    "Adding..."
+                  ) : (
+                    <>
+                      <Plus className="mr-1.5 h-3 w-3" aria-hidden="true" />
+                      Add capital
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full border-slate-200 bg-white px-4 text-[11px] font-medium hover:bg-slate-50"
+                  onClick={handleOpenWithdraw}
+                  disabled={isWithdrawing}
+                >
+                  <ArrowDownLeft className="mr-1.5 h-3 w-3" aria-hidden="true" />
+                  Withdraw
+                </Button>
+              </div>
             </div>
-            <div className="flex w-32 flex-col items-end justify-between gap-2 sm:w-36">
-              <Button
-                className="w-full rounded-full px-4 text-[11px] font-medium"
-                onClick={handleAddCapital}
-                disabled={isDepositing}
-              >
-                {isDepositing ? (
-                  "Adding..."
-                ) : (
-                  <>
-                    <Plus className="mr-1.5 h-3 w-3" aria-hidden="true" />
-                    Add capital
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full rounded-full border-slate-200 bg-white px-4 text-[11px] font-medium hover:bg-slate-50"
-                onClick={handleOpenWithdraw}
-                disabled={isWithdrawing}
-              >
-                <ArrowDownLeft className="mr-1.5 h-3 w-3" aria-hidden="true" />
-                Withdraw
-              </Button>
-            </div>
-          </div>
-          {withdrawError || depositError ? (
-            <p className="text-[10px] text-rose-600">
-              {withdrawError || depositError}
+            {withdrawError || depositError ? (
+              <p className="text-[10px] text-rose-600">
+                {withdrawError || depositError}
+              </p>
+            ) : null}
+            <p className="text-[10px] text-slate-400">
+              In this prototype, these actions are illustrative only.
             </p>
-          ) : null}
-          <p className="text-[10px] text-slate-400">
-            In this prototype, these actions are illustrative only.
-          </p>
-        </div>
+          </div>
+        ) : (
+          <div className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-6 text-center text-xs text-slate-600 sm:w-1/2 sm:text-sm">
+            <div className="rounded-full bg-slate-200/50 p-3">
+              <Wallet className="h-5 w-5 text-slate-400" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium text-slate-900">Your Position</p>
+              <p className="mx-auto max-w-[200px] text-[11px] text-slate-500">
+                Connect your wallet to view your Taker or Absorber positions.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="mt-2 rounded-full px-6"
+              onClick={handleConnectWallet}
+            >
+              Connect Wallet
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card className="border-slate-200 bg-white/95 shadow-sm shadow-slate-900/5">
