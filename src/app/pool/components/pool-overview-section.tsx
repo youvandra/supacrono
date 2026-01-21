@@ -116,7 +116,16 @@ function simplifyTransactionError(error: unknown, fallback: string): string {
   return simplified
 }
 
-export function PoolOverviewSection() {
+export function PoolOverviewSection({
+  initialOnchainTotals,
+}: {
+  initialOnchainTotals?: {
+    totalAvailable: number
+    totalInPosition: number
+    totalTakerInPosition: number
+    totalAbsorberInPosition: number
+  } | null
+}) {
   const { toast } = useToast()
   const [totalPoolValue, setTotalPoolValue] = useState<string | null>(null)
   const [totalPoolValueUsd, setTotalPoolValueUsd] = useState<number | null>(
@@ -130,8 +139,10 @@ export function PoolOverviewSection() {
     totalInPosition: number
     totalTakerInPosition: number
     totalAbsorberInPosition: number
-  } | null>(null)
-  const [isLoadingOnchainTotals, setIsLoadingOnchainTotals] = useState(false)
+  } | null>(initialOnchainTotals ?? null)
+  const [isLoadingOnchainTotals, setIsLoadingOnchainTotals] = useState(
+    !initialOnchainTotals
+  )
   const [account, setAccount] = useState<string | null>(null)
   const [userAvailable, setUserAvailable] = useState<number | null>(null)
   const [userInPosition, setUserInPosition] = useState<number | null>(null)
@@ -286,36 +297,25 @@ export function PoolOverviewSection() {
     let cancelled = false
 
     async function loadOnchainTotals() {
-      setIsLoadingOnchainTotals(true)
+      // If we already have initial data, don't show loading state
+      if (!onchainTotals) {
+        setIsLoadingOnchainTotals(true)
+      }
 
       try {
-        const contract = getSupaPoolContract(RPC_PROVIDER)
-        const [
-          totalAvailableRaw,
-          totalInPositionRaw,
-          totalTakerInPositionRaw,
-          totalAbsorberInPositionRaw,
-        ] = await Promise.all([
-          contract.totalAvailable(),
-          contract.totalInPosition(),
-          contract.totalTakerInPosition(),
-          contract.totalAbsorberInPosition(),
-        ])
+        const response = await fetch("/api/pool-stats")
+        if (!response.ok) throw new Error("Failed to fetch pool stats")
+        
+        const result = await response.json()
+        if (!result.success) throw new Error(result.error || "Failed to fetch pool stats")
 
-        if (cancelled) {
-          return
-        }
+        if (cancelled) return
 
-        const toNumber = (value: bigint) => Number(formatUnits(value, 18))
-
-        setOnchainTotals({
-          totalAvailable: toNumber(totalAvailableRaw),
-          totalInPosition: toNumber(totalInPositionRaw),
-          totalTakerInPosition: toNumber(totalTakerInPositionRaw),
-          totalAbsorberInPosition: toNumber(totalAbsorberInPositionRaw),
-        })
-      } catch {
-        if (!cancelled) {
+        setOnchainTotals(result.data)
+      } catch (err) {
+        console.error("Failed to load on-chain totals:", err)
+        // Only set to null if we don't have any data at all (initial or current)
+        if (!cancelled && !onchainTotals) {
           setOnchainTotals(null)
         }
       } finally {

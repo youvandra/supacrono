@@ -48,6 +48,22 @@ export function AITradingStatusSection() {
     }
 
     loadStatus()
+
+    // Real-time subscription
+    const channel = supabase
+        .channel('ai-status-updates')
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'ai_trading_status' },
+            (payload) => {
+                setStatus(payload.new as AITradingStatus)
+            }
+        )
+        .subscribe()
+
+    return () => {
+        supabase.removeChannel(channel)
+    }
   }, [])
 
   const displayStatus = status || {

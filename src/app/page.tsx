@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import {
@@ -293,11 +294,14 @@ function HeroSection() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
+              asChild
               className="inline-flex w-full items-center justify-center rounded-full px-6 py-5 text-sm font-medium shadow-sm sm:w-auto"
               aria-label="Get started with Supacron"
             >
-              Join the pool
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              <Link href="/pool">
+                Join the pool
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              </Link>
             </Button>
           </motion.div>
           <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }}>

@@ -28,6 +28,7 @@ import {
   SUPA_CP_ABI,
   SUPA_CP_CONTRACT_ADDRESS,
 } from "@/lib/smart-contract/supa"
+import { createPaymentHeader } from "@/lib/x402"
 import {
   connectWalletCronosEvm,
   getConnectedAccount,
@@ -216,28 +217,64 @@ export default function PoolAdminPage() {
     setIsAgentLoading(true)
     setAgentStatus(null)
     try {
-      const response = await fetch("/api/agent/calculate-status", {
+      const payload = {
+        totalAvailable,
+        totalInPosition,
+        operatorBalance
+      }
+
+      let response = await fetch("/api/admin/lock-pool", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          totalAvailable,
-          totalInPosition,
-          operatorBalance,
-          absorberYieldBps,
-          operator
-        }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
       })
+
+      // Handle x402 Payment Required
+      if (response.status === 402) {
+        const { paymentRequirements } = await response.json()
+        
+        if (!(window as any).ethereum) {
+           throw new Error("No wallet found. Please install MetaMask or similar.")
+        }
+        
+        const provider = new BrowserProvider((window as any).ethereum)
+        
+        setAgentStatus("Please sign the x402 payment authorization...")
+        toast("Please sign the x402 payment authorization...", "info")
+        
+        const paymentHeader = await createPaymentHeader({
+            provider,
+            paymentRequirements
+        })
+        
+        setAgentStatus("Submitting payment and locking pool...")
+        
+        // Retry with payment header
+        response = await fetch("/api/admin/lock-pool", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Payment": paymentHeader
+            },
+            body: JSON.stringify(payload)
+        })
+      }
 
       const data = await response.json()
       if (!response.ok) {
         throw new Error(data.error || `Server error: ${response.statusText}`)
       }
 
-      setAgentStatus("AI Agent successfully updated trading status!")
-      toast("AI Agent successfully updated trading status!", "success")
+      setAgentStatus(data.message || "Pool locked by AI Agent!")
+      toast(data.message || "Pool locked by AI Agent!", "success")
+      
+      // Refresh contract data to show new state
+      fetchContractData()
     } catch (error: unknown) {
       console.error(error)
-      const message = error instanceof Error ? error.message : "Agent calculation failed"
+      const message = error instanceof Error ? error.message : "Agent action failed"
       setAgentStatus(`Error: ${message}`)
       toast(`Error: ${message}`, "error")
     } finally {
@@ -311,9 +348,9 @@ export default function PoolAdminPage() {
                     {isAgentLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <Bot className="mr-2 h-4 w-4" />
+                      <Brain className="mr-2 h-4 w-4" />
                     )}
-                    Analyze
+                    Open AI
                   </Button>
                 </div>
               </CardContent>
