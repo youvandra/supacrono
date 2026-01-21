@@ -67,7 +67,8 @@ export default function PoolAdminPage() {
   const [withdrawOperatorAmount, setWithdrawOperatorAmount] = useState("")
 
   // AI Agent State
-  const [isAgentLoading, setIsAgentLoading] = useState(false)
+  const [isOpeningPosition, setIsOpeningPosition] = useState(false)
+  const [isClosingPosition, setIsClosingPosition] = useState(false)
   const [agentStatus, setAgentStatus] = useState<string | null>(null)
 
   useEffect(() => {
@@ -300,7 +301,7 @@ export default function PoolAdminPage() {
   }
 
   const handleCalculateAgent = async () => {
-    setIsAgentLoading(true)
+    setIsOpeningPosition(true)
     setAgentStatus(null)
     try {
       const payload = {
@@ -364,12 +365,12 @@ export default function PoolAdminPage() {
       setAgentStatus(`Error: ${message}`)
       toast(`Error: ${message}`, "error")
     } finally {
-      setIsAgentLoading(false)
+      setIsOpeningPosition(false)
     }
   }
 
   const handleClosePosition = async () => {
-    setIsAgentLoading(true)
+    setIsClosingPosition(true)
     setAgentStatus(null)
     try {
       setAgentStatus("Closing position and unlocking pool...")
@@ -397,7 +398,7 @@ export default function PoolAdminPage() {
         setAgentStatus(`Error: ${message}`)
         toast(`Error: ${message}`, "error")
     } finally {
-        setIsAgentLoading(false)
+        setIsClosingPosition(false)
     }
   }
 
@@ -461,10 +462,10 @@ export default function PoolAdminPage() {
                   </div>
                   <Button 
                     onClick={handleCalculateAgent} 
-                    disabled={isAgentLoading}
+                    disabled={isOpeningPosition || isClosingPosition}
                     className="bg-purple-600 text-white hover:bg-purple-700"
                   >
-                    {isAgentLoading ? (
+                    {isOpeningPosition ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <Brain className="mr-2 h-4 w-4" />
@@ -473,11 +474,11 @@ export default function PoolAdminPage() {
                   </Button>
                   <Button 
                     onClick={handleClosePosition} 
-                    disabled={isAgentLoading || Number(totalInPosition) <= 0}
+                    disabled={isOpeningPosition || isClosingPosition || Number(totalInPosition) <= 0}
                     variant="outline"
                     className="border-purple-200 text-purple-700 hover:bg-purple-100"
                   >
-                    {isAgentLoading ? (
+                    {isClosingPosition ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <XCircle className="mr-2 h-4 w-4" />
