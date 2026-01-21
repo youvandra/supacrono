@@ -215,8 +215,14 @@ export async function GET() {
     })
 
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error("Crypto.com API Error:", response.status, errorText)
       return NextResponse.json(
-        { error: "Failed to fetch positions" },
+        { 
+          error: "Failed to fetch positions", 
+          details: errorText,
+          upstreamStatus: response.status 
+        },
         { status: 502 }
       )
     }

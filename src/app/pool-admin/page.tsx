@@ -142,6 +142,49 @@ export default function PoolAdminPage() {
     return await provider.getSigner()
   }
 
+  const simplifyErrorMessage = (error: unknown): string => {
+    if (!error) return "Unknown error occurred"
+    
+    const message = error instanceof Error ? error.message : String(error)
+    
+    // User rejected transaction (MetaMask)
+    if (message.toLowerCase().includes("user rejected") || message.includes("User denied")) {
+      return "Transaction cancelled by user."
+    }
+    
+    // Insufficient funds
+    if (message.includes("insufficient funds") || message.includes("exceeds balance")) {
+      return "Insufficient funds to complete this transaction."
+    }
+    
+    // Smart Contract Revert
+    if (message.includes("execution reverted")) {
+      // Try to extract the reason if present
+      const match = message.match(/execution reverted: (.*?)"/) || message.match(/reason="(.*?)"/)
+      if (match && match[1]) {
+        return `Contract error: ${match[1]}`
+      }
+      return "Transaction failed: Contract execution reverted."
+    }
+
+    // Network issues
+    if (message.toLowerCase().includes("network") || message.includes("failed to fetch")) {
+      return "Network connection error. Please try again."
+    }
+    
+    // Common API errors
+    if (message.includes("500")) {
+        return "Server error. Please try again later."
+    }
+
+    // Long technical errors (truncate if it looks like a stack trace or raw JSON)
+    if (message.length > 150 && (message.includes("{") || message.includes("at "))) {
+        return `Error: ${message.substring(0, 100)}... (See console for details)`
+    }
+    
+    return message
+  }
+
   const executeTransaction = async (
     actionName: string,
     action: (contract: Contract) => Promise<unknown>
@@ -168,8 +211,7 @@ export default function PoolAdminPage() {
       fetchContractData()
     } catch (error: unknown) {
       console.error(error)
-      const message =
-        error instanceof Error ? error.message : "Transaction failed"
+      const message = simplifyErrorMessage(error)
       setStatusMessage(`Error: ${message}`)
       toast(`Error: ${message}`, "error")
     } finally {
@@ -274,7 +316,7 @@ export default function PoolAdminPage() {
       fetchContractData()
     } catch (error: unknown) {
       console.error(error)
-      const message = error instanceof Error ? error.message : "Agent action failed"
+      const message = simplifyErrorMessage(error)
       setAgentStatus(`Error: ${message}`)
       toast(`Error: ${message}`, "error")
     } finally {
@@ -307,7 +349,7 @@ export default function PoolAdminPage() {
       fetchContractData()
     } catch (error: unknown) {
         console.error(error)
-        const message = error instanceof Error ? error.message : "Close action failed"
+        const message = simplifyErrorMessage(error)
         setAgentStatus(`Error: ${message}`)
         toast(`Error: ${message}`, "error")
     } finally {
