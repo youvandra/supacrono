@@ -36,6 +36,7 @@ import {
 } from "../pool/pool-helpers"
 import { SiteHeader } from "../pool/components/site-header"
 import { FooterSection } from "../pool/components/footer-section"
+import { logPoolActivity } from "@/app/actions/pool-activity"
 
 export default function PoolAdminPage() {
   const { toast } = useToast()
@@ -185,9 +186,16 @@ export default function PoolAdminPage() {
     return message
   }
 
+  const formatNumber = (val: string) => {
+    const num = parseFloat(val)
+    if (isNaN(num)) return "0"
+    return num.toLocaleString(undefined, { maximumFractionDigits: 3, minimumFractionDigits: 0 })
+  }
+
   const executeTransaction = async (
     actionName: string,
-    action: (contract: Contract) => Promise<unknown>
+    action: (contract: Contract) => Promise<unknown>,
+    onSuccess?: (hash: string) => Promise<void>
   ) => {
     setIsLoading(true)
     setStatusMessage(null)
@@ -206,6 +214,11 @@ export default function PoolAdminPage() {
       setStatusMessage(`${actionName} transaction submitted: ${tx.hash}`)
       toast(`${actionName} transaction submitted`, "info")
       await tx.wait()
+      
+      if (onSuccess) {
+          await onSuccess(tx.hash)
+      }
+      
       setStatusMessage(`${actionName} confirmed!`)
       toast(`${actionName} confirmed!`, "success")
       fetchContractData()
@@ -243,15 +256,35 @@ export default function PoolAdminPage() {
 
   const handleReportProfit = () => {
     if (!profitAmount) return
-    executeTransaction("Report Profit", (contract) =>
-      contract.reportProfit({ value: parseUnits(profitAmount, 18) })
+    executeTransaction(
+      "Report Profit", 
+      (contract) => contract.reportProfit({ value: parseUnits(profitAmount, 18) }),
+      async (hash) => {
+          await logPoolActivity({
+              activity_type: 'DEPOSIT',
+              role: 'OPERATOR',
+              amount: profitAmount,
+              tx_hash: hash,
+              description: `Reported Profit: ${profitAmount} CRO`
+          })
+      }
     )
   }
 
   const handleWithdrawOperator = () => {
     if (!withdrawOperatorAmount) return
-    executeTransaction("Withdraw Operator", (contract) =>
-      contract.withdrawOperator(parseUnits(withdrawOperatorAmount, 18))
+    executeTransaction(
+      "Withdraw Operator", 
+      (contract) => contract.withdrawOperator(parseUnits(withdrawOperatorAmount, 18)),
+      async (hash) => {
+          await logPoolActivity({
+              activity_type: 'WITHDRAW',
+              role: 'OPERATOR',
+              amount: withdrawOperatorAmount,
+              tx_hash: hash,
+              description: `Operator Withdraw: ${withdrawOperatorAmount} CRO`
+          })
+      }
     )
   }
 
@@ -453,7 +486,7 @@ export default function PoolAdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalAvailable}</div>
+                  <div className="text-2xl font-bold">{formatNumber(totalAvailable)}</div>
                   <p className="text-xs text-slate-500">tCRO</p>
                 </CardContent>
               </Card>
@@ -464,7 +497,7 @@ export default function PoolAdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalInPosition}</div>
+                  <div className="text-2xl font-bold">{formatNumber(totalInPosition)}</div>
                   <p className="text-xs text-slate-500">tCRO</p>
                 </CardContent>
               </Card>
@@ -487,7 +520,7 @@ export default function PoolAdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{operatorBalance}</div>
+                  <div className="text-2xl font-bold">{formatNumber(operatorBalance)}</div>
                   <p className="text-xs text-slate-500">tCRO</p>
                 </CardContent>
               </Card>
@@ -511,7 +544,7 @@ export default function PoolAdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalTakerInPosition}</div>
+                  <div className="text-2xl font-bold">{formatNumber(totalTakerInPosition)}</div>
                   <p className="text-xs text-slate-500">tCRO</p>
                 </CardContent>
               </Card>
@@ -522,7 +555,7 @@ export default function PoolAdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalAbsorberInPosition}</div>
+                  <div className="text-2xl font-bold">{formatNumber(totalAbsorberInPosition)}</div>
                   <p className="text-xs text-slate-500">tCRO</p>
                 </CardContent>
               </Card>

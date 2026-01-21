@@ -898,7 +898,7 @@ export function PoolOverviewSection({
                 {poolPnlDisplay}
               </p>
               <p className="text-[11px] text-slate-500">
-                Realized + unrealized since epoch start
+                Realized
               </p>
             </div>
           </div>

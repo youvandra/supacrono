@@ -9,6 +9,9 @@ import { AITradingStatusSection } from "./components/ai-trading-status-section"
 import { CapitalDistributionSection } from "./components/capital-distribution-section"
 import { ActivityAndRiskSection } from "./components/activity-and-risk-section"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getInitialPoolData() {
   try {
     const provider = new JsonRpcProvider("https://evm-t3.cronos.org")

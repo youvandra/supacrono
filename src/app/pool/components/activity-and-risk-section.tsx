@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowUpRight } from "lucide-react"
 import Link from "next/link"
@@ -27,6 +28,12 @@ interface PoolActivity {
 }
 
 export function ActivityAndRiskSection({ activities = [] }: { activities?: PoolActivity[] }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return (
     <motion.section
       className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
@@ -71,7 +78,7 @@ export function ActivityAndRiskSection({ activities = [] }: { activities?: PoolA
                     <div className="min-w-0">
                         <p className="truncate font-medium text-slate-900">{activity.description}</p>
                         <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                            <span>{new Date(activity.created_at).toLocaleString()}</span>
+                            <span>{mounted ? new Date(activity.created_at).toLocaleString() : new Date(activity.created_at).toISOString().split('T')[0]}</span>
                             <span>•</span>
                             <a 
                                 href={`https://explorer.cronos.org/testnet/tx/${activity.tx_hash}`} 

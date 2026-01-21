@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import crypto from "crypto"
 
-const API_URL = "https://api.crypto.com/exchange/v1/private/get-positions"
+const API_URL = process.env.CRYPTOCOM_API_URL || "https://api.crypto.com/exchange/v1/private/get-positions"
 const INSTRUMENT = "CROUSD-PERP"
 
 function getCredentials() {
@@ -185,6 +185,8 @@ export async function GET() {
   }
 
   const { apiKey, apiSecret } = credentials
+  console.log(`Fetching positions from ${API_URL} using API Key: ${apiKey.substring(0, 4)}...`)
+
   const id = Date.now()
   const nonce = Date.now()
   const params: Record<string, unknown> = {}
@@ -217,9 +219,17 @@ export async function GET() {
     if (!response.ok) {
       const errorText = await response.text()
       console.error("Crypto.com API Error:", response.status, errorText)
+      
+      let errorMessage = "Failed to fetch positions"
+      if (response.status === 401) {
+        errorMessage = "Authentication failed. Check API keys and IP whitelisting."
+      } else if (response.status === 403) {
+        errorMessage = "Access forbidden. IP might not be whitelisted."
+      }
+
       return NextResponse.json(
         { 
-          error: "Failed to fetch positions", 
+          error: errorMessage, 
           details: errorText,
           upstreamStatus: response.status 
         },

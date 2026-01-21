@@ -40,7 +40,10 @@ export async function recordPoolActivity(activity: {
 }
 
 export async function getRecentPoolActivity(limit = 10) {
-    if (!supabaseUrl || !supabaseKey) return []
+    if (!supabaseUrl || !supabaseKey) {
+        console.warn("Supabase credentials missing in getRecentPoolActivity", { url: !!supabaseUrl, key: !!supabaseKey })
+        return []
+    }
 
     try {
         const supabase = createClient(supabaseUrl, supabaseKey)
@@ -55,6 +58,8 @@ export async function getRecentPoolActivity(limit = 10) {
             console.error("Failed to fetch pool activity:", error)
             return []
         }
+        
+        console.log(`Fetched ${data?.length} activities`)
         return data
     } catch (e) {
         console.error("Error fetching pool activity:", e)
