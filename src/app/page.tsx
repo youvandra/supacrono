@@ -286,9 +286,9 @@ function HeroSection() {
         </h1>
 
         <p className="mt-4 max-w-2xl text-balance text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl">
-          Supacron lets users co-manage pooled capital on Cronos EVM with an
-          AI trading engine, aligning upside-seeking Takers and yield-focused
-          Absorbers under transparent, on-chain risk governance.
+          Supacron pioneers "Pay-to-Compute" on Cronos EVM, using the X402 protocol
+          to gate AI execution. Takers and Absorbers co-manage capital with an
+          autonomous agent, aligning upside and yield under transparent risk governance.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -648,9 +648,9 @@ function MetricCard({ label, value, change, trend }: MetricCardProps) {
 function FeaturesSection() {
   const features = [
     {
-      title: "Dual economic roles",
+      title: "Pay-to-Compute (X402)",
       description:
-        "Takers chase upside with aggressive exposure while Absorbers supply stable capital and earn protected yield.",
+        "AI execution is economically gated via the X402 protocol, requiring cryptographic authorization payments for compute resources.",
     },
     {
       title: "On-chain risk governance",
@@ -706,8 +706,8 @@ function FeaturesSection() {
 function TestimonialsSection() {
   return (
     <motion.section
-      id="blog"
-      aria-labelledby="testimonials-heading"
+      id="overview"
+      aria-labelledby="overview-heading"
       className="mt-16 grid gap-8 sm:mt-24 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)]"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -716,34 +716,31 @@ function TestimonialsSection() {
     >
       <div>
         <h2
-          id="testimonials-heading"
+          id="overview-heading"
           className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-600"
         >
-          Testimonials
+          Overview
         </h2>
         <p className="mt-3 text-balance text-xl font-semibold text-slate-900 sm:text-2xl">
-          Built for serious DeFi and trading teams.
+          A new standard for pooled AI trading.
         </p>
         <p className="mt-3 max-w-md text-sm text-slate-600">
-          Supacron combines AI execution, capital tranching, and on-chain
+          Supacron combines AI execution, X402 payment rails, and on-chain
           settlement to create a transparent, self-regulating environment for
           pooled trading and hedging on Cronos EVM.
         </p>
 
         <div className="mt-6 flex items-center gap-4">
           <div className="flex -space-x-2">
-            <Avatar className="h-9 w-9 border border-white">
-              <AvatarImage src="/file.svg" alt="" />
-              <AvatarFallback>AP</AvatarFallback>
-            </Avatar>
-            <Avatar className="h-9 w-9 border border-white">
-              <AvatarImage src="/globe.svg" alt="" />
-              <AvatarFallback>MS</AvatarFallback>
-            </Avatar>
-            <Avatar className="h-9 w-9 border border-white">
-              <AvatarImage src="/window.svg" alt="" />
-              <AvatarFallback>JT</AvatarFallback>
-            </Avatar>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white bg-slate-100 text-[10px] font-bold text-slate-600">
+              AI
+            </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white bg-emerald-100 text-[10px] font-bold text-emerald-600">
+              $
+            </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white bg-blue-100 text-[10px] font-bold text-blue-600">
+              Tx
+            </div>
           </div>
           <div className="text-xs text-slate-600">
             <p className="font-semibold text-slate-900">Two-sided market</p>
@@ -753,35 +750,36 @@ function TestimonialsSection() {
       </div>
 
       <Card
-        id="pricing"
+        id="details"
         className="border-slate-200 bg-white/80 p-6 shadow-sm shadow-slate-900/5"
       >
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-slate-900">
-            “Supacron makes pooled AI trading actually governable.”
+            Governable AI Trading
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 text-sm text-slate-600">
           <p>
-            “The protocol encodes drawdown limits, waterfalls, and circuit
-            breakers directly in smart contracts. Our team can push AI-driven
-            trading while keeping Absorber capital explicitly protected.”
+            The protocol encodes drawdown limits, waterfalls, and circuit
+            breakers directly in smart contracts. This allows the AI Agent to
+            execute high-frequency strategies off-chain while keeping Absorber
+            capital explicitly protected on-chain.
           </p>
         </CardContent>
         <CardFooter className="mt-4 flex items-center justify-between pt-4">
           <div>
             <p className="text-sm font-semibold text-slate-900">
-              Lena Park
+              Cronos EVM
             </p>
             <p className="text-xs text-slate-500">
-              Core contributor, Cronos hackathon team
+              Secure & Scalable Settlement
             </p>
           </div>
           <Button
             variant="outline"
             size="sm"
             className="rounded-full border-slate-200 bg-white px-4 text-xs font-medium hover:bg-slate-50"
-            aria-label="View customer stories"
+            aria-label="View protocol documentation"
           >
             View protocol docs
             <ArrowUpRight className="ml-2 h-3 w-3" aria-hidden="true" />

@@ -13,14 +13,14 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Supacron – AI-native pooled trading on Cronos EVM",
+  title: "Supacron – Pay-to-Compute AI Trading on Cronos EVM",
   description:
-    "Supacron is an AI-powered pooled trading protocol on Cronos EVM where Takers chase upside and Absorbers earn protected yield under strict on-chain risk governance.",
+    "Supacron is an AI-native pooled trading protocol on Cronos EVM using X402 payment rails to gate autonomous execution for Takers and Absorbers.",
   metadataBase: new URL("https://supacron.example.com"),
   openGraph: {
-    title: "Supacron – AI-native pooled trading on Cronos EVM",
+    title: "Supacron – Pay-to-Compute AI Trading on Cronos EVM",
     description:
-      "AI executes trades off-chain while Cronos EVM smart contracts manage pooled capital, waterfalls, and circuit breakers for Takers and Absorbers.",
+      "AI executes trades off-chain gated by X402 payments, while Cronos EVM smart contracts manage pooled capital and risk for Takers and Absorbers.",
     url: "https://supacron.example.com",
     siteName: "Supacron",
     images: [
@@ -28,16 +28,16 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Superior dashboard preview",
+        alt: "Supacron dashboard preview",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Supacron – AI-native pooled trading on Cronos EVM",
+    title: "Supacron – Pay-to-Compute AI Trading on Cronos EVM",
     description:
-      "Join a trustable, transparent, and self-regulating environment for AI-driven pooled trading and hedging on Cronos EVM.",
+      "Join a trustable, transparent, and self-regulating environment for AI-driven pooled trading with X402 payment rails on Cronos EVM.",
     images: ["/og-image.png"],
   },
 }
