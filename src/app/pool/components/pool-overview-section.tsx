@@ -553,7 +553,7 @@ export function PoolOverviewSection({
           role: withdrawRole.toUpperCase() as 'TAKER' | 'ABSORBER',
           amount: trimmedAmount,
           tx_hash: tx.hash,
-          description: `Withdrew ${trimmedAmount} CRO from ${withdrawRole}`
+          description: `Withdraw ${trimmedAmount} CRO from ${withdrawRole}`
       })
 
       toast("Withdrawal confirmed!", "success")

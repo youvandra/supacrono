@@ -335,18 +335,6 @@ export function PortfolioOverviewSection({
             pool, splitting positions between Takers and Absorbers, tracking
             accrued yield, and summarizing risk against protocol limits.
           </p>
-          <div className="mt-5 flex flex-wrap gap-3 text-xs">
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span className="font-medium uppercase tracking-[0.18em]">
-                Demo only
-              </span>
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
-              <PieChart className="h-3 w-3" aria-hidden="true" />
-              <span>Illustrative balances and PnL for Cronos hackathon</span>
-            </span>
-          </div>
         </div>
         <div className="grid w-full gap-3 text-xs text-slate-600 sm:w-80 sm:text-sm">
           <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
