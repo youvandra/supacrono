@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/toast"
 
+import { useRouter } from "next/navigation"
+
 import {
   SUPA_CP_ABI,
   SUPA_CP_CONTRACT_ADDRESS,
@@ -39,6 +41,7 @@ import { FooterSection } from "../pool/components/footer-section"
 import { logPoolActivity } from "@/app/actions/pool-activity"
 
 export default function PoolAdminPage() {
+  const router = useRouter()
   const { toast } = useToast()
   const [account, setAccount] = useState<string | null>(null)
   const [operator, setOperator] = useState<string | null>(null)
@@ -71,6 +74,14 @@ export default function PoolAdminPage() {
     getConnectedAccount().then(setAccount)
     fetchContractData()
   }, [])
+
+  useEffect(() => {
+    // Redirect if account is connected but not operator
+    if (account && operator && account.toLowerCase() !== operator.toLowerCase()) {
+      toast("Access Denied: You are not the operator.", "error")
+      router.push("/pool")
+    }
+  }, [account, operator, router, toast])
 
   const fetchContractData = async () => {
     try {
