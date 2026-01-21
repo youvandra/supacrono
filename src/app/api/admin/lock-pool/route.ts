@@ -103,17 +103,45 @@ export async function POST(request: NextRequest) {
 
     // Payment Successful. Proceed with AI Analysis -> Order -> Lock.
     
-    // 1. Fetch Price
+    // 1. Fetch Price & Instrument Info
     let currentPrice = 0
+    let bidPrice = 0
+    let askPrice = 0
+    let quantityDecimals = 2 // Default
+    let quoteDecimals = 2 // Default
+    let minQuantity = 0
+    let qtyTickSize = 0
+
     try {
-        const priceRes = await fetch("https://api.crypto.com/v2/public/get-ticker?instrument_name=CRO_USD")
-        const priceData = await priceRes.json()
-        if (priceData.code === 0 && priceData.result?.data?.[0]?.a) {
-            currentPrice = Number(priceData.result.data[0].a)
+        const [tickerRes, instrumentsRes] = await Promise.all([
+            fetch("https://api.crypto.com/v2/public/get-ticker?instrument_name=CROUSD-PERP"),
+            fetch("https://api.crypto.com/exchange/v1/public/get-instruments")
+        ])
+
+        const priceData = await tickerRes.json()
+        if (priceData.code === 0 && priceData.result?.data?.[0]) {
+            const data = priceData.result.data[0]
+            currentPrice = Number(data.k || data.a) 
+            bidPrice = Number(data.b)
+            askPrice = Number(data.a)
         }
-        console.log("Current CRO Price:", currentPrice)
+
+        const instData = await instrumentsRes.json()
+        if (instData.code === 0 && instData.result?.data) {
+            const inst = instData.result.data.find((i: any) => i.symbol === "CROUSD-PERP")
+            if (inst) {
+                if (inst.quantity_decimals !== undefined) quantityDecimals = Number(inst.quantity_decimals)
+                if (inst.quote_decimals !== undefined) quoteDecimals = Number(inst.quote_decimals)
+                if (inst.min_quantity !== undefined) minQuantity = Number(inst.min_quantity)
+                if (inst.qty_tick_size !== undefined) qtyTickSize = Number(inst.qty_tick_size)
+                
+                console.log("Instrument Info:", { quantityDecimals, quoteDecimals, minQuantity, qtyTickSize })
+            }
+        }
+
+        console.log("Current CRO Price (PERP):", { currentPrice, bidPrice, askPrice })
     } catch (e) {
-        console.error("Failed to fetch price:", e)
+        console.error("Failed to fetch price/instrument:", e)
     }
 
     // 2. Fetch Pool Size from Contract
@@ -213,37 +241,50 @@ export async function POST(request: NextRequest) {
         try {
             // Calculate position size WITHOUT leverage (Leverage is just a field)
             const positionSizeCRO = (totalPoolValue * (aiAnalysis.positionSizePercent / 100))
-            const quantityCRO = positionSizeCRO
+            let quantity = positionSizeCRO
+
+            // 1. Adjust for Tick Size
+            if (qtyTickSize > 0) {
+                // Round to nearest tick size
+                quantity = Math.round(quantity / qtyTickSize) * qtyTickSize
+            }
             
-            // Round quantity to valid precision (e.g. 2 decimals)
-            const quantity = Number(quantityCRO.toFixed(2))
+            // 2. Adjust for Precision
+            quantity = Number(quantity.toFixed(quantityDecimals))
+
+            // 3. Min Quantity Check (or Tick Size floor fallback)
+            // If quantity became 0 but we wanted to trade, force min tick size
+            // (Only if pool is large enough to support it, which >30 check ensures)
+            if (quantity === 0 && positionSizeCRO > 0 && qtyTickSize > 0) {
+                 quantity = qtyTickSize
+            }
+
+            // Enforce minimum quantity if known
+            if (minQuantity > 0 && quantity < minQuantity) {
+                console.log(`Quantity ${quantity} below minimum ${minQuantity}. Adjusting to minimum.`)
+                quantity = minQuantity
+            }
 
             if (quantity > 0) {
-                console.log(`Executing ${aiAnalysis.action} order for ${quantity} CRO`)
+                console.log(`Executing ${aiAnalysis.action} order for ${quantity} CRO on CROUSD-PERP`)
                 
-                // Spot Market:
-                // BUY: quantity = Quote Currency (USD) if using MARKET order? NO, usually Base Currency.
-                // However, Crypto.com Spot API for MARKET BUY often requires 'notional' (Quote Amount) instead of 'quantity' (Base Amount).
-                // Let's check if we can use quantity.
-                // Actually, for MARKET orders on many exchanges:
-                // BUY -> notional (USD amount to spend)
-                // SELL -> quantity (CRO amount to sell)
-                
-                // Let's try forcing it to be a string to avoid scientific notation issues, though toFixed(2) handles that.
-                
-                // IMPORTANT: For CRO_USD Spot, min quantity might be higher or precision different.
-                
-                const orderParams: any = {
-                    instrument_name: "CRO_USD", 
-                    side: aiAnalysis.action,
-                    type: "MARKET",
-                }
+                // Determine Limit Price
+                // BUY: Use Ask Price (a) to ensure fill (or slightly higher, but Ask is safe for immediate fill usually)
+                // SELL: Use Bid Price (b) to ensure fill
+                let limitPrice = currentPrice
+                if (aiAnalysis.action === "BUY" && askPrice > 0) limitPrice = askPrice
+                if (aiAnalysis.action === "SELL" && bidPrice > 0) limitPrice = bidPrice
 
-                // If BUY, for Spot Market, it's often better to specify how much USD we want to spend (notional)
-                // But typically 'quantity' works for Base asset.
-                // The error "Invalid quantity format" suggests it might be too small or too many decimals.
-                // Let's try sending as string.
-                orderParams.quantity = quantity
+                // Format Price Precision
+                limitPrice = Number(limitPrice.toFixed(quoteDecimals))
+
+                const orderParams: any = {
+                    instrument_name: "CROUSD-PERP", 
+                    side: aiAnalysis.action,
+                    type: "LIMIT",
+                    price: limitPrice.toString(),
+                    quantity: quantity.toString()
+                }
 
                 orderResult = await callCryptoComApi("private/create-order", orderParams)
                 console.log("Order Result:", JSON.stringify(orderResult, null, 2))

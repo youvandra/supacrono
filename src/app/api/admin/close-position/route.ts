@@ -33,13 +33,48 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    // 2. Close Position via Exchange API
+    // 2. Fetch Position PnL (Before Closing)
+    let pnlCRO = 0
+    if (process.env.CRYPTOCOM_API_KEY) {
+        try {
+            console.log("Fetching position PnL for CROUSD-PERP...")
+            // Get Position PnL
+            const posRes = await callCryptoComApi("private/get-positions", {
+                instrument_name: "CROUSD-PERP"
+            })
+            
+            if (posRes.code === 0 && posRes.result?.data?.[0]) {
+                const pos = posRes.result.data[0]
+                const pnlUSD = Number(pos.open_position_pnl || 0)
+                
+                // Get Current Price to convert USD PnL to CRO
+                let price = 0.09 // Fallback
+                try {
+                    const tickerRes = await fetch("https://api.crypto.com/v2/public/get-ticker?instrument_name=CROUSD-PERP")
+                    const tickerData = await tickerRes.json()
+                    if (tickerData.code === 0 && tickerData.result?.data?.[0]?.a) {
+                        price = Number(tickerData.result.data[0].a)
+                    }
+                } catch (e) { console.warn("Price fetch failed, using fallback 0.09") }
+
+                if (price > 0) {
+                    pnlCRO = pnlUSD / price
+                }
+                console.log(`Estimated PnL: ${pnlUSD} USD (~${pnlCRO} CRO)`)
+            }
+        } catch (e) {
+            console.error("Failed to fetch position PnL:", e)
+        }
+    }
+
+    // 3. Close Position via Exchange API
     let closeResult = null
     if (process.env.CRYPTOCOM_API_KEY) {
         try {
             console.log("Closing position via private/close-position...")
+            // Try CROUSD-PERP first
             closeResult = await callCryptoComApi("private/close-position", {
-                instrument_name: "CRO_USD",
+                instrument_name: "CROUSD-PERP",
                 type: "MARKET"
             })
             console.log("Close Result:", closeResult)
@@ -49,7 +84,7 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    // 3. Unlock Pool in Smart Contract
+    // 4. Report Profit/Loss & Unlock Pool in Smart Contract
     const contract = new Contract(SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI, wallet)
     
     // Check operator
@@ -58,13 +93,37 @@ export async function POST(request: NextRequest) {
        throw new Error(`Wallet ${wallet.address} is not the operator.`)
     }
 
+    // Report Profit/Loss if non-zero
+    if (pnlCRO !== 0) {
+        try {
+            const pnlWei = BigInt(Math.floor(Math.abs(pnlCRO) * 1e18))
+            
+            if (pnlCRO > 0) {
+                console.log(`Reporting Profit: ${pnlCRO} CRO (${pnlWei} wei)`)
+                const tx = await contract.reportProfit({ value: pnlWei })
+                await tx.wait()
+                console.log("Profit Reported:", tx.hash)
+            } else {
+                console.log(`Reporting Loss: ${Math.abs(pnlCRO)} CRO (${pnlWei} wei)`)
+                const tx = await contract.reportLoss(pnlWei)
+                await tx.wait()
+                console.log("Loss Reported:", tx.hash)
+            }
+        } catch (e) {
+            console.error("Failed to report PnL to contract:", e)
+            // Continue to unlock even if reporting fails
+        }
+    }
+
     console.log("Unlocking pool...")
     const tx = await contract.unlockGlobal()
     await tx.wait()
     const txHash = tx.hash
     console.log("Pool unlocked:", txHash)
 
-    // 4. Update Supabase (Optional but good for UI consistency)
+    // 4. Update Supabase (SKIPPED as per request)
+    // User requested to not update AI status when closing pool.
+    /*
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -94,6 +153,7 @@ export async function POST(request: NextRequest) {
     } else {
         console.warn("Supabase credentials missing. Skipping DB save.")
     }
+    */
 
     return NextResponse.json({
       success: true,
