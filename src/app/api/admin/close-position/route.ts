@@ -33,37 +33,16 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    // 2. Sell All CRO (Close Position)
+    // 2. Close Position via Exchange API
     let closeResult = null
     if (process.env.CRYPTOCOM_API_KEY) {
         try {
-            // Get Account Summary to find CRO balance
-            const accountRes = await callCryptoComApi("private/get-account-summary", {
-                currency: "CRO"
+            console.log("Closing position via private/close-position...")
+            closeResult = await callCryptoComApi("private/close-position", {
+                instrument_name: "CRO_USD",
+                type: "MARKET"
             })
-            
-            // accountRes structure: { code: 0, result: { accounts: [ { currency: "CRO", balance: 100, available: 100, ... } ] } }
-            const croAccount = accountRes?.result?.accounts?.find((a: any) => a.currency === "CRO")
-            const availableBalance = Number(croAccount?.available || 0)
-
-            console.log("Available CRO to sell:", availableBalance)
-
-            if (availableBalance > 1) { // Minimum threshold
-                 // Round down to 2 decimals or safe precision
-                 const quantity = Math.floor(availableBalance * 100) / 100
-
-                 console.log(`Selling ${quantity} CRO...`)
-                 closeResult = await callCryptoComApi("private/create-order", {
-                    instrument_name: "CRO_USD",
-                    side: "SELL",
-                    type: "MARKET",
-                    quantity: quantity
-                })
-                console.log("Close Result:", closeResult)
-            } else {
-                console.log("No significant CRO balance to sell.")
-                closeResult = { message: "No CRO balance to sell" }
-            }
+            console.log("Close Result:", closeResult)
         } catch (e) {
             console.error("Failed to close position:", e)
             closeResult = { error: String(e) }
@@ -100,7 +79,7 @@ export async function POST(request: NextRequest) {
                     current_bias: "Neutral",
                     current_bias_desc: "Position closed by Operator.",
                     position_size: "0% of pool",
-                    position_size_desc: closeResult?.result?.order_id ? `Sold CRO via Order: ${closeResult.result.order_id}` : "No assets to sell.",
+                    position_size_desc: "Position closed via Exchange API.",
                     risk_budget: "0%",
                     risk_budget_desc: "Pool is open for deposits/withdrawals.",
                     leverage: "1x",
