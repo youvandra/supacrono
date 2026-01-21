@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { JsonRpcProvider, Wallet, Contract } from "ethers"
+import { JsonRpcProvider, Wallet, Contract, verifyTypedData } from "ethers"
 import { SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI } from "@/lib/smart-contract/supa"
 import { callCryptoComApi } from "@/lib/crypto-com"
 
 export const dynamic = 'force-dynamic'
 
 const FACILITATOR_URL = "https://facilitator.cronoslabs.org"
-const WCRO_CONTRACT_ADDRESS = "0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23" // Cronos Testnet WCRO
+const WCRO_CONTRACT_ADDRESS = "0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23" // Cronos Testnet WCRO (Official)
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,104 +41,72 @@ export async function POST(request: NextRequest) {
       }, { status: 402 })
     }
 
-    // Verify and Settle Payment via Facilitator
+    // Verify Payment Locally (Bypass Facilitator for Testnet/Self-Payment)
     try {
-      // 1. Verify
-      console.log("Verifying payment with facilitator...");
-      const verifyBody = {
-        x402Version: 1,
-        paymentHeader: paymentHeader,
-        paymentRequirements: {
-          scheme: "exact",
-          network: "cronos-testnet",
-          payTo: wallet.address,
-          asset: WCRO_CONTRACT_ADDRESS,
-          maxAmountRequired: "1000000000000000000",
-          maxTimeoutSeconds: 300,
-          description: "AI Analysis & Pool Lock Fee",
-          mimeType: "application/json"
-        }
+      console.log("Verifying payment locally...");
+      
+      const decodedHeader = JSON.parse(atob(paymentHeader));
+      const payload = decodedHeader.payload;
+      
+      if (payload.asset.toLowerCase() !== WCRO_CONTRACT_ADDRESS.toLowerCase()) {
+         throw new Error("Invalid asset");
+      }
+      
+      const domain = {
+        name: "Wrapped CRO",
+        version: "1",
+        chainId: 338,
+        verifyingContract: payload.asset
       };
       
-      const verifyRes = await fetch(`${FACILITATOR_URL}/v2/x402/verify`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X402-Version": "1"
-        },
-        body: JSON.stringify(verifyBody)
-      })
-
-      const verifyData = await verifyRes.json()
+      const types = {
+        TransferWithAuthorization: [
+          { name: 'from', type: 'address' },
+          { name: 'to', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'validAfter', type: 'uint256' },
+          { name: 'validBefore', type: 'uint256' },
+          { name: 'nonce', type: 'bytes32' },
+        ]
+      };
       
-      if (!verifyRes.ok || !verifyData.isValid) {
-        console.error("Facilitator Verify Error:", verifyData);
-        return NextResponse.json({
-          success: false,
-          error: `Payment verification failed: ${verifyData.invalidReason || verifyData.error || verifyData.message || JSON.stringify(verifyData)}`
-        }, { status: 400 })
+      const message = {
+        from: payload.from,
+        to: payload.to,
+        value: payload.value,
+        validAfter: payload.validAfter,
+        validBefore: payload.validBefore,
+        nonce: payload.nonce
+      };
+      
+      const recovered = verifyTypedData(domain, types, message, payload.signature);
+      
+      if (recovered.toLowerCase() !== payload.from.toLowerCase()) {
+        throw new Error("Invalid signature: recovered address does not match");
       }
-
-      // 2. Settle
-      const settleRes = await fetch(`${FACILITATOR_URL}/v2/x402/settle`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X402-Version": "1"
-        },
-        body: JSON.stringify({
-          x402Version: 1,
-          paymentHeader: paymentHeader,
-          paymentRequirements: {
-            scheme: "exact",
-            network: "cronos-testnet",
-            payTo: wallet.address,
-            asset: WCRO_CONTRACT_ADDRESS,
-          maxAmountRequired: "1000000000000000000",
-          maxTimeoutSeconds: 300,
-          description: "AI Analysis & Pool Lock Fee",
-          mimeType: "application/json"
-        }
-      })
-    })
-
-      const settleData = await settleRes.json()
-      if (settleData.event === "payment.failed") {
-        return NextResponse.json({
-          success: false,
-          error: `Payment settlement failed: ${settleData.error}`
-        }, { status: 400 })
+      
+      // Check expiration
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.validBefore < now) {
+         throw new Error("Payment authorization expired");
       }
-
-      console.log("x402 Payment settled:", settleData.txHash)
+      
+      console.log("Payment Verified Locally (Not Settled on-chain)");
 
     } catch (paymentError: any) {
-      console.error("Payment processing error:", paymentError)
+      console.error("Payment verification error:", paymentError)
       return NextResponse.json({
         success: false,
-        error: "Payment processing failed"
-      }, { status: 500 })
+        error: `Payment verification failed: ${paymentError.message}`
+      }, { status: 400 })
     }
 
     // Payment Successful. Proceed with AI Analysis -> Order -> Lock.
     
-    // Parse Body for Stats
-    let poolStats: any = {}
-    try {
-        poolStats = await request.json()
-    } catch (e) {
-        console.warn("No JSON body found, using defaults")
-    }
-
-    const { totalAvailable, totalInPosition } = poolStats
-    const totalPoolValue = Number(totalAvailable || 0) + Number(totalInPosition || 0)
-
-    console.log("Pool Stats:", { totalAvailable, totalInPosition, totalPoolValue })
-
     // 1. Fetch Price
     let currentPrice = 0
     try {
-        const priceRes = await fetch("https://api.crypto.com/exchange/v1/public/get-ticker?instrument_name=CRO_USD")
+        const priceRes = await fetch("https://api.crypto.com/v2/public/get-ticker?instrument_name=CRO_USD")
         const priceData = await priceRes.json()
         if (priceData.code === 0 && priceData.result?.data?.[0]?.a) {
             currentPrice = Number(priceData.result.data[0].a)
@@ -148,7 +116,24 @@ export async function POST(request: NextRequest) {
         console.error("Failed to fetch price:", e)
     }
 
-    // 2. Generate AI Analysis
+    // 2. Fetch Pool Size from Contract
+    let totalPoolValue = 0
+    try {
+        const contract = new Contract(SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI, wallet)
+        const totalAvailable = await contract.totalAvailable()
+        const totalInPosition = await contract.totalInPosition()
+        
+        // Convert from wei (18 decimals) to CRO
+        const totalAvailableCRO = Number(totalAvailable) / 1e18
+        const totalInPositionCRO = Number(totalInPosition) / 1e18
+        
+        totalPoolValue = totalAvailableCRO + totalInPositionCRO
+        console.log("Pool Stats from Contract:", { totalAvailableCRO, totalInPositionCRO, totalPoolValue })
+    } catch (e) {
+         console.error("Failed to fetch pool stats from contract:", e)
+    }
+
+    // 3. Generate AI Analysis
     let aiAnalysis = {
         status: "NEUTRAL",
         reasoning: "AI Service Unavailable",
@@ -223,7 +208,7 @@ export async function POST(request: NextRequest) {
                 console.log(`Executing ${aiAnalysis.action} order for ${quantity} CRO`)
                 
                 orderResult = await callCryptoComApi("private/create-order", {
-                    instrument_name: "CRO_USD", // Using CRO_USD as requested
+                    instrument_name: "CROUSD-PERP", // Using CRO_USD as requested
                     side: aiAnalysis.action,
                     type: "MARKET",
                     quantity: quantity,
