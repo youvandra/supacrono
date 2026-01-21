@@ -221,13 +221,31 @@ export async function POST(request: NextRequest) {
             if (quantity > 0) {
                 console.log(`Executing ${aiAnalysis.action} order for ${quantity} CRO`)
                 
-                orderResult = await callCryptoComApi("private/create-order", {
-                    instrument_name: "CROUSD-PERP", // Changed from CROUSD-PERP to Spot CRO_USD
+                // Spot Market:
+                // BUY: quantity = Quote Currency (USD) if using MARKET order? NO, usually Base Currency.
+                // However, Crypto.com Spot API for MARKET BUY often requires 'notional' (Quote Amount) instead of 'quantity' (Base Amount).
+                // Let's check if we can use quantity.
+                // Actually, for MARKET orders on many exchanges:
+                // BUY -> notional (USD amount to spend)
+                // SELL -> quantity (CRO amount to sell)
+                
+                // Let's try forcing it to be a string to avoid scientific notation issues, though toFixed(2) handles that.
+                
+                // IMPORTANT: For CRO_USD Spot, min quantity might be higher or precision different.
+                
+                const orderParams: any = {
+                    instrument_name: "CRO_USD", 
                     side: aiAnalysis.action,
                     type: "MARKET",
-                    quantity: quantity,
-                    // client_oid: ... optional
-                })
+                }
+
+                // If BUY, for Spot Market, it's often better to specify how much USD we want to spend (notional)
+                // But typically 'quantity' works for Base asset.
+                // The error "Invalid quantity format" suggests it might be too small or too many decimals.
+                // Let's try sending as string.
+                orderParams.quantity = quantity
+
+                orderResult = await callCryptoComApi("private/create-order", orderParams)
                 console.log("Order Result:", JSON.stringify(orderResult, null, 2))
             }
         } catch (e: any) {

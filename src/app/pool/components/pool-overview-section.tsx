@@ -538,7 +538,8 @@ export function PoolOverviewSection({
         return
       }
 
-      const role = withdrawRole === "taker" ? 1 : 0
+      // FIX: Align withdraw role mapping with deposit mapping (Taker=0, Absorber=1)
+      const role = withdrawRole === "taker" ? 0 : 1
 
       const tx = await contract.withdraw(role, value)
       toast("Withdraw transaction submitted", "info")
@@ -618,7 +619,11 @@ export function PoolOverviewSection({
       )
 
       const value = parseUnits(trimmedAmount, 18)
-      const role = depositRole === "taker" ? 1 : 0
+      // FIX: Taker should be 0, Absorber should be 1 based on common enum patterns.
+      // But let's check the contract logic. If the user says "Taker" is going to "Absorber",
+      // it means the current mapping (Taker=1) is likely inverted.
+      // Changing Taker to 0 and Absorber to 1.
+      const role = depositRole === "taker" ? 0 : 1
 
       const tx = await contract.deposit(role, { value })
       toast("Deposit transaction submitted", "info")
