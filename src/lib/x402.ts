@@ -36,7 +36,7 @@ export async function createPaymentHeader({
 
   // Set up EIP-712 domain
   const domain = {
-    name: "Bridged USDC (Stargate)",
+    name: "Wrapped CRO",
     version: "1",
     chainId: 338, // Cronos Testnet
     verifyingContract: asset,

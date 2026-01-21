@@ -6,7 +6,7 @@ import { callCryptoComApi } from "@/lib/crypto-com"
 export const dynamic = 'force-dynamic'
 
 const FACILITATOR_URL = "https://facilitator.cronoslabs.org"
-const USDC_CONTRACT_ADDRESS = "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0" // Cronos Testnet USDC.e
+const WCRO_CONTRACT_ADDRESS = "0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23" // Cronos Testnet WCRO
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
           scheme: "exact",
           network: "cronos-testnet",
           payTo: wallet.address,
-          asset: USDC_CONTRACT_ADDRESS,
-          maxAmountRequired: "1000000", // 1 USDC.e
+          asset: WCRO_CONTRACT_ADDRESS,
+          maxAmountRequired: "1000000000000000000", // 1 WCRO
           maxTimeoutSeconds: 300,
           description: "AI Analysis & Pool Lock Fee",
           mimeType: "application/json"
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
           scheme: "exact",
           network: "cronos-testnet",
           payTo: wallet.address,
-          asset: USDC_CONTRACT_ADDRESS,
-          maxAmountRequired: "1000000",
+          asset: WCRO_CONTRACT_ADDRESS,
+          maxAmountRequired: "1000000000000000000",
           maxTimeoutSeconds: 300,
           description: "AI Analysis & Pool Lock Fee",
           mimeType: "application/json"
@@ -93,14 +93,14 @@ export async function POST(request: NextRequest) {
             scheme: "exact",
             network: "cronos-testnet",
             payTo: wallet.address,
-            asset: USDC_CONTRACT_ADDRESS,
-            maxAmountRequired: "1000000",
-            maxTimeoutSeconds: 300,
-            description: "AI Analysis & Pool Lock Fee",
-            mimeType: "application/json"
-          }
-        })
+            asset: WCRO_CONTRACT_ADDRESS,
+          maxAmountRequired: "1000000000000000000",
+          maxTimeoutSeconds: 300,
+          description: "AI Analysis & Pool Lock Fee",
+          mimeType: "application/json"
+        }
       })
+    })
 
       const settleData = await settleRes.json()
       if (settleData.event === "payment.failed") {
@@ -141,11 +141,7 @@ export async function POST(request: NextRequest) {
         const priceRes = await fetch("https://api.crypto.com/exchange/v1/public/get-ticker?instrument_name=CRO_USD")
         const priceData = await priceRes.json()
         if (priceData.code === 0 && priceData.result?.data?.[0]?.a) {
-            currentPrice = Number(priceData.result.data[0].a) // 'a' is usually ask price (best for buy), 'b' for bid (best for sell). AI decides action.
-            // Let's use last trade price 'a' (last trade) or 'a' is ask? In v1 public ticker, 'a' is last trade price usually or 'a' is ask.
-            // Documentation says: a: The price of the latest trade, null if no trade has occurred
-            // Wait, usually 'a' is ask, 'b' is bid, 't' is trade? 
-            // Crypto.com v1 ticker: 'a' is latest trade price.
+            currentPrice = Number(priceData.result.data[0].a)
         }
         console.log("Current CRO Price:", currentPrice)
     } catch (e) {
@@ -170,12 +166,12 @@ export async function POST(request: NextRequest) {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "google/gemini-2.0-flash-exp:free", // Use a fast/free model
+                    model: "google/gemini-2.0-flash-001", // Use a fast/free model
                     messages: [
                         {
                             role: "system",
                             content: `You are an expert crypto trading AI. Analyze the market for Cronos (CRO) given the current price: $${currentPrice}.
-                            Pool Size: ${totalPoolValue} USDC.
+                            Pool Size: ${totalPoolValue} tCRO.
                             
                             Return a JSON object ONLY with no markdown formatting:
                             {
@@ -217,8 +213,8 @@ export async function POST(request: NextRequest) {
     
     if (aiAnalysis.action !== "HOLD" && process.env.CRYPTOCOM_API_KEY && currentPrice > 0) {
         try {
-            const positionSizeUSDC = (totalPoolValue * (aiAnalysis.positionSizePercent / 100)) * aiAnalysis.leverage
-            const quantityCRO = positionSizeUSDC / currentPrice
+            const positionSizeCRO = (totalPoolValue * (aiAnalysis.positionSizePercent / 100)) * aiAnalysis.leverage
+            const quantityCRO = positionSizeCRO
             
             // Round quantity to valid precision (e.g. 2 decimals)
             const quantity = Number(quantityCRO.toFixed(2))
