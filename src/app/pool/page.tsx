@@ -1,5 +1,6 @@
 import { JsonRpcProvider, Contract, formatUnits } from "ethers"
 import { SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI } from "@/lib/smart-contract/supa"
+import { getRecentPoolActivity } from "@/lib/pool-activity"
 import { SiteHeader } from "./components/site-header"
 import { FooterSection } from "./components/footer-section"
 import { PoolOverviewSection } from "./components/pool-overview-section"
@@ -39,6 +40,7 @@ async function getInitialPoolData() {
 
 export default async function PoolPage() {
   const initialData = await getInitialPoolData()
+  const recentActivities = await getRecentPoolActivity(5) // Fetch last 5 activities
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
@@ -48,7 +50,7 @@ export default async function PoolPage() {
         <PoolAdvancedChartSection />
         <AITradingStatusSection />
         <CapitalDistributionSection />
-        <ActivityAndRiskSection />
+        <ActivityAndRiskSection activities={recentActivities as any[]} />
       </main>
       <FooterSection />
     </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { JsonRpcProvider, Wallet, Contract } from "ethers"
 import { SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI } from "@/lib/smart-contract/supa"
 import { callCryptoComApi } from "@/lib/crypto-com"
+import { recordPoolActivity } from "@/lib/pool-activity"
 
 export const dynamic = 'force-dynamic'
 
@@ -120,6 +121,17 @@ export async function POST(request: NextRequest) {
     await tx.wait()
     const txHash = tx.hash
     console.log("Pool unlocked:", txHash)
+
+    // Record Pool Activity
+    await recordPoolActivity({
+        activity_type: 'CLOSE_TRADE',
+        role: 'OPERATOR',
+        amount: 0, // Could fetch position size if needed
+        asset: 'CRO',
+        tx_hash: txHash,
+        description: `Position Closed. PnL: ${pnlCRO.toFixed(2)} CRO.`,
+        pnl: pnlCRO
+    })
 
     // 4. Update Supabase (SKIPPED as per request)
     // User requested to not update AI status when closing pool.

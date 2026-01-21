@@ -14,7 +14,19 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-export function ActivityAndRiskSection() {
+interface PoolActivity {
+  id: string
+  created_at: string
+  activity_type: 'OPEN_TRADE' | 'CLOSE_TRADE' | 'DEPOSIT' | 'WITHDRAW'
+  role: 'TAKER' | 'ABSORBER' | 'OPERATOR'
+  amount: number
+  asset: string
+  tx_hash: string
+  description: string
+  pnl?: number
+}
+
+export function ActivityAndRiskSection({ activities = [] }: { activities?: PoolActivity[] }) {
   return (
     <motion.section
       className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
@@ -29,16 +41,66 @@ export function ActivityAndRiskSection() {
             Recent pool activity
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center text-xs text-slate-600">
-          <Badge
-            variant="outline"
-            className="mb-3 rounded-full border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500"
-          >
-            Coming Soon
-          </Badge>
-          <p className="max-w-xs text-balance">
-            Real-time trade execution and pool settlement logs will be displayed here.
-          </p>
+        <CardContent className="p-0">
+          {activities.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-xs text-slate-600">
+              <Badge
+                variant="outline"
+                className="mb-3 rounded-full border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500"
+              >
+                No Activity Yet
+              </Badge>
+              <p className="max-w-xs text-balance">
+                Real-time trade execution and pool settlement logs will be displayed here.
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {activities.map((activity) => (
+                <li key={activity.id} className="flex items-center justify-between px-4 py-3 text-xs hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
+                        activity.activity_type === 'DEPOSIT' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' :
+                        activity.activity_type === 'WITHDRAW' ? 'border-rose-100 bg-rose-50 text-rose-600' :
+                        'border-blue-100 bg-blue-50 text-blue-600'
+                    }`}>
+                        {activity.activity_type === 'DEPOSIT' && <span className="text-lg leading-none">↓</span>}
+                        {activity.activity_type === 'WITHDRAW' && <span className="text-lg leading-none">↑</span>}
+                        {(activity.activity_type === 'OPEN_TRADE' || activity.activity_type === 'CLOSE_TRADE') && <span className="text-[10px] font-bold">AI</span>}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-900">{activity.description}</p>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                            <span>{new Date(activity.created_at).toLocaleString()}</span>
+                            <span>•</span>
+                            <a 
+                                href={`https://explorer.cronos.org/testnet/tx/${activity.tx_hash}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="hover:text-slate-900 hover:underline"
+                            >
+                                View Tx
+                            </a>
+                        </div>
+                    </div>
+                  </div>
+                  <div className="text-right pl-2 shrink-0">
+                    <p className={`font-medium ${
+                        activity.activity_type === 'DEPOSIT' || (activity.pnl && activity.pnl > 0) ? 'text-emerald-600' :
+                        activity.activity_type === 'WITHDRAW' || (activity.pnl && activity.pnl < 0) ? 'text-rose-600' :
+                        'text-slate-900'
+                    }`}>
+                        {activity.activity_type === 'DEPOSIT' ? '+' : activity.activity_type === 'WITHDRAW' ? '-' : ''}
+                        {Number(activity.amount || 0).toFixed(2)} {activity.asset}
+                    </p>
+                    {activity.role && (
+                        <p className="text-[10px] text-slate-500 lowercase">{activity.role}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
 

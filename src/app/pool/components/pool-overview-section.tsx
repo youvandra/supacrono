@@ -29,6 +29,8 @@ import {
   SUPA_CP_CONTRACT_ADDRESS,
 } from "@/lib/smart-contract/supa"
 
+import { logPoolActivity } from "@/app/actions/pool-activity"
+
 function simplifyTransactionError(error: unknown, fallback: string): string {
   if (!error) {
     return fallback
@@ -544,6 +546,16 @@ export function PoolOverviewSection({
       const tx = await contract.withdraw(role, value)
       toast("Withdraw transaction submitted", "info")
       await tx.wait()
+
+      // Log Activity
+      await logPoolActivity({
+          activity_type: 'WITHDRAW',
+          role: withdrawRole.toUpperCase() as 'TAKER' | 'ABSORBER',
+          amount: trimmedAmount,
+          tx_hash: tx.hash,
+          description: `Withdrew ${trimmedAmount} CRO from ${withdrawRole}`
+      })
+
       toast("Withdrawal confirmed!", "success")
 
       const updatedUser = await contract.users(signerAddress)
@@ -628,6 +640,16 @@ export function PoolOverviewSection({
       const tx = await contract.deposit(role, { value })
       toast("Deposit transaction submitted", "info")
       await tx.wait()
+
+      // Log Activity
+      await logPoolActivity({
+          activity_type: 'DEPOSIT',
+          role: depositRole.toUpperCase() as 'TAKER' | 'ABSORBER',
+          amount: trimmedAmount,
+          tx_hash: tx.hash,
+          description: `Deposited ${trimmedAmount} CRO into ${depositRole}`
+      })
+
       toast("Capital added successfully!", "success")
 
       setAccount(signerAddress)

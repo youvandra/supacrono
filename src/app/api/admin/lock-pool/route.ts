@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { JsonRpcProvider, Wallet, Contract, verifyTypedData } from "ethers"
 import { SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI } from "@/lib/smart-contract/supa"
 import { callCryptoComApi } from "@/lib/crypto-com"
+import { recordPoolActivity } from "@/lib/pool-activity"
 
 export const dynamic = 'force-dynamic'
 
@@ -315,6 +316,16 @@ export async function POST(request: NextRequest) {
         await tx.wait()
         txHash = tx.hash
         console.log("Pool locked:", txHash)
+
+        // Record Pool Activity
+        await recordPoolActivity({
+            activity_type: 'OPEN_TRADE',
+            role: 'OPERATOR',
+            amount: aiAnalysis.positionSizePercent, // Just recording % as amount is hard to track perfectly here without passing var
+            asset: 'CRO',
+            tx_hash: txHash,
+            description: `AI Executed ${aiAnalysis.action} (${aiAnalysis.positionSizePercent}%). Locked Pool.`
+        })
     }
 
     // 5. Store AI Decision in Supabase (for Pool Page display)
