@@ -321,7 +321,7 @@ export async function POST(request: NextRequest) {
         await recordPoolActivity({
             activity_type: 'OPEN_TRADE',
             role: 'OPERATOR',
-            amount: aiAnalysis.positionSizePercent, // Just recording % as amount is hard to track perfectly here without passing var
+            amount: 0, 
             asset: 'CRO',
             tx_hash: txHash,
             description: `AI Executed ${aiAnalysis.action} (${aiAnalysis.positionSizePercent}%). Locked Pool.`

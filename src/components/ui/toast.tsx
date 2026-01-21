@@ -78,7 +78,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 export function useToast() {
   const context = useContext(ToastContext)
   if (!context) {
-    throw new Error("useToast must be used within a ToastProvider")
+    console.warn("useToast was called outside of ToastProvider. Returning dummy toast.")
+    return { 
+      toast: (message: string, type?: ToastType, duration?: number) => {
+        console.log(`[Toast Fallback] ${type}: ${message}`)
+      }
+    }
   }
   return context
 }
