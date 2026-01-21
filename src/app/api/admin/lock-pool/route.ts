@@ -118,13 +118,14 @@ export async function POST(request: NextRequest) {
 
     // 2. Fetch Pool Size from Contract
     let totalPoolValue = 0
+    let totalAvailableCRO = 0
     try {
         const contract = new Contract(SUPA_CP_CONTRACT_ADDRESS, SUPA_CP_ABI, wallet)
         const totalAvailable = await contract.totalAvailable()
         const totalInPosition = await contract.totalInPosition()
         
         // Convert from wei (18 decimals) to CRO
-        const totalAvailableCRO = Number(totalAvailable) / 1e18
+        totalAvailableCRO = Number(totalAvailable) / 1e18
         const totalInPositionCRO = Number(totalInPosition) / 1e18
         
         totalPoolValue = totalAvailableCRO + totalInPositionCRO
@@ -156,13 +157,18 @@ export async function POST(request: NextRequest) {
                         {
                             role: "system",
                             content: `You are an expert crypto trading AI. Analyze the market for Cronos (CRO) given the current price: $${currentPrice}.
-                            Pool Size: ${totalPoolValue} tCRO.
+                            Pool Total: ${totalPoolValue} tCRO.
+                            Pool Available: ${totalAvailableCRO} tCRO.
                             
+                            Constraint:
+                            - If Pool Available > 30 tCRO: You MUST weigh the market and take a position (ACTION: BUY or SELL). Do NOT return NEUTRAL/HOLD.
+                            - If Pool Available <= 30 tCRO: You may remain NEUTRAL if market conditions are unclear.
+
                             Return a JSON object ONLY with no markdown formatting:
                             {
                                 "status": "BULLISH" | "BEARISH" | "NEUTRAL",
                                 "reasoning": "string (max 20 words)",
-                                "action": "BUY" | "SELL",
+                                "action": "BUY" | "SELL" | "HOLD",
                                 "positionSizePercent": number (1-100),
                                 "leverage": number (1-5)
                             }`
@@ -182,6 +188,13 @@ export async function POST(request: NextRequest) {
                     // Remove markdown code blocks if any
                     const cleanContent = content.replace(/```json/g, "").replace(/```/g, "").trim()
                     aiAnalysis = JSON.parse(cleanContent)
+
+                    // Enforce Neutral Logic: No leverage, no position size
+                    if (aiAnalysis.status === "NEUTRAL") {
+                        aiAnalysis.positionSizePercent = 0
+                        aiAnalysis.leverage = 1
+                        aiAnalysis.action = "HOLD"
+                    }
                 } catch (parseError) {
                     console.error("Failed to parse AI response:", content)
                 }
@@ -198,7 +211,8 @@ export async function POST(request: NextRequest) {
     
     if (aiAnalysis.action !== "HOLD" && process.env.CRYPTOCOM_API_KEY && currentPrice > 0) {
         try {
-            const positionSizeCRO = (totalPoolValue * (aiAnalysis.positionSizePercent / 100)) * aiAnalysis.leverage
+            // Calculate position size WITHOUT leverage (Leverage is just a field)
+            const positionSizeCRO = (totalPoolValue * (aiAnalysis.positionSizePercent / 100))
             const quantityCRO = positionSizeCRO
             
             // Round quantity to valid precision (e.g. 2 decimals)
@@ -208,13 +222,13 @@ export async function POST(request: NextRequest) {
                 console.log(`Executing ${aiAnalysis.action} order for ${quantity} CRO`)
                 
                 orderResult = await callCryptoComApi("private/create-order", {
-                    instrument_name: "CROUSD-PERP", // Using CRO_USD as requested
+                    instrument_name: "CROUSD-PERP", // Changed from CROUSD-PERP to Spot CRO_USD
                     side: aiAnalysis.action,
                     type: "MARKET",
                     quantity: quantity,
                     // client_oid: ... optional
                 })
-                console.log("Order Result:", orderResult)
+                console.log("Order Result:", JSON.stringify(orderResult, null, 2))
             }
         } catch (e: any) {
             console.error("Order Execution Failed:", e)
